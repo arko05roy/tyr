@@ -18,13 +18,13 @@ describe('testnet guard (live)', () => {
   });
 
   it('fails when a live RPC does not match the expected chain id', async () => {
-    // Real Sepolia RPC, but we claim it should be Base Sepolia → must fail.
-    const c = await checkEvm('mismatch', cfg.SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.baseSepolia);
+    // Real Tempo RPC, but we claim it should be Base Sepolia → must fail.
+    const c = await checkEvm('mismatch', cfg.TEMPO_RPC_URL, EVM_TESTNET_CHAIN_IDS.baseSepolia);
     expect(c.ok).toBe(false);
   });
 
   it('refuses a configured mainnet chain id', async () => {
-    const c = await checkEvm('mainnet', cfg.SEPOLIA_RPC, 1);
+    const c = await checkEvm('mainnet', cfg.TEMPO_RPC_URL, 1);
     expect(c.ok).toBe(false);
     expect(c.detail).toMatch(/mainnet/);
   });

@@ -5,6 +5,9 @@
 # Requires: PAYER keypair with ≥0.5 devnet SOL. RECIPIENT keypair (gets funded by PAYER).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+# spl-token ≥5.6.1 required: 5.5.0 builds proofs devnet's ZK ElGamal program rejects
+# (PubkeyValidity AlgebraicRelation). Install: cargo install spl-token-cli --version 5.6.1 --locked --root .tools
+export PATH="$PWD/.tools/bin:$PATH"
 
 RPC="${SOLANA_RPC_URL:-https://api.devnet.solana.com}"
 PAYER="${S1_PAYER:-keys/s1-payer.json}"

@@ -25,9 +25,10 @@ export const configSchema = z.object({
   ROBINHOOD_RPC_URL: url,
   ROBINHOOD_CHAIN_ID: chainId,
 
-  SEPOLIA_RPC: url,
-  BASE_SEPOLIA_RPC: url,
-  ARB_SEPOLIA_RPC: url,
+  // Deposit-source chains (Phase 6) — optional until then; guarded only when set.
+  SEPOLIA_RPC: url.optional(),
+  BASE_SEPOLIA_RPC: url.optional(),
+  ARB_SEPOLIA_RPC: url.optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -35,7 +36,9 @@ export type Config = z.infer<typeof configSchema>;
 export class ConfigError extends Error {}
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const parsed = configSchema.safeParse(env);
+  // Treat blank `KEY=` lines in .env as unset.
+  const cleaned = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== ''));
+  const parsed = configSchema.safeParse(cleaned);
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`);
     throw new ConfigError(`Invalid environment:\n${lines.join('\n')}`);

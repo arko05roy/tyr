@@ -101,8 +101,7 @@ export async function checkZcash(endpoint: string): Promise<GuardCheck> {
       client.GetLightdInfo({}, { deadline: Date.now() + 15_000 }, (e: Error | null, r: never) =>
         e ? reject(e) : resolve(r),
       ),
-    );
-    client.close();
+    ).finally(() => client.close());
     const ok = info.chainName === ZCASH_TESTNET_CHAIN_NAME;
     return { name, ok, detail: `chainName=${info.chainName} height=${info.blockHeight}` };
   } catch (err) {
@@ -111,12 +110,15 @@ export async function checkZcash(endpoint: string): Promise<GuardCheck> {
 }
 
 export async function runTestnetGuard(cfg: Config): Promise<GuardCheck[]> {
+  const optional = [
+    ['sepolia', cfg.SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.sepolia],
+    ['base-sepolia', cfg.BASE_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.baseSepolia],
+    ['arb-sepolia', cfg.ARB_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.arbSepolia],
+  ] as const;
   return Promise.all([
     checkEvm('tempo', cfg.TEMPO_RPC_URL, cfg.TEMPO_CHAIN_ID),
     checkEvm('robinhood', cfg.ROBINHOOD_RPC_URL, cfg.ROBINHOOD_CHAIN_ID),
-    checkEvm('sepolia', cfg.SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.sepolia),
-    checkEvm('base-sepolia', cfg.BASE_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.baseSepolia),
-    checkEvm('arb-sepolia', cfg.ARB_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.arbSepolia),
+    ...optional.flatMap(([n, rpc, id]) => (rpc ? [checkEvm(n, rpc, id)] : [])),
     checkSolana(cfg.SOLANA_RPC_URL),
     checkHyperliquid(cfg.HL_API_URL),
     checkZcash(cfg.ZCASH_LIGHTWALLETD_URL),

@@ -16,3 +16,4 @@ target/
 keys/
 
 .DS_Store
+.tools/
