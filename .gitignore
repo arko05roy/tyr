@@ -1,13 +1,18 @@
-# Dependencies and generated build output
-web/node_modules/
-web/.next/
-web/out/
-web/build/
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+target/
+.turbo/
+*.tsbuildinfo
 
-# Local environment and machine-specific files
-.env*
-web/.env*
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.keypair.json
+keys/
+
 .DS_Store
-
-# Nested local Git metadata
-web/.git/

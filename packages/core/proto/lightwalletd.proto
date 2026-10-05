@@ -1,0 +1,19 @@
+// Minimal subset of zcash/lightwallet-protocol walletrpc/service.proto (field numbers verified upstream).
+syntax = "proto3";
+package cash.z.wallet.sdk.rpc;
+
+message Empty {}
+
+message LightdInfo {
+  string version = 1;
+  string vendor = 2;
+  bool taddrSupport = 3;
+  string chainName = 4;
+  uint64 saplingActivationHeight = 5;
+  string consensusBranchId = 6;
+  uint64 blockHeight = 7;
+}
+
+service CompactTxStreamer {
+  rpc GetLightdInfo(Empty) returns (LightdInfo) {}
+}

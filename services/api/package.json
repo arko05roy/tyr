@@ -1,0 +1,16 @@
+{
+  "name": "@tyr/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tyr/core": "workspace:*",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.0"
+  }
+}

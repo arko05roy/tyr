@@ -1,0 +1,143 @@
+// PRD §1.1 core data model.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LimitPeriod {
+  day
+  week
+}
+
+enum Side {
+  yes
+  no
+}
+
+enum Visibility {
+  private
+  public
+}
+
+model User {
+  id                  String   @id @default(cuid())
+  tempoAddress        String   @unique
+  passkeyCredentialId String   @unique
+  region              String?
+  createdAt           DateTime @default(now())
+
+  lossLimits           LossLimit[]
+  confidentialAccount  ConfidentialAccount?
+  deposits             Deposit[]
+  orders               Order[]
+  agentSessions        AgentSession[]
+}
+
+model LossLimit {
+  id               String      @id @default(cuid())
+  userId           String
+  user             User        @relation(fields: [userId], references: [id])
+  period           LimitPeriod
+  amountUsd        Decimal     @db.Decimal(18, 6)
+  tempoAccessKeyId String
+  expiresAt        DateTime
+
+  @@index([userId])
+}
+
+model ConfidentialAccount {
+  userId             String @id
+  user               User   @relation(fields: [userId], references: [id])
+  solanaTokenAccount String @unique
+  elgamalPubkey      String
+  aeKeyRef           String
+}
+
+model Deposit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  sourceChain String
+  sourceTx    String
+  amount      Decimal  @db.Decimal(36, 18)
+  status      String
+  solanaTx    String?
+  createdAt   DateTime @default(now())
+
+  @@unique([sourceChain, sourceTx])
+  @@index([userId])
+}
+
+model ZcashOrder {
+  id         String   @id @default(cuid())
+  txid       String   @unique
+  memoRaw    Bytes
+  marketId   String
+  side       Side
+  size       Decimal  @db.Decimal(36, 8)
+  returnAddr String
+  status     String
+  createdAt  DateTime @default(now())
+}
+
+model Order {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  hlMarket   String
+  side       Side
+  size       Decimal  @db.Decimal(36, 8)
+  price      Decimal  @db.Decimal(36, 8)
+  hlOid      BigInt?
+  builderFee Decimal? @db.Decimal(36, 8)
+  status     String
+  createdAt  DateTime @default(now())
+
+  settlement Settlement?
+  hedge      Hedge?
+
+  @@index([userId])
+}
+
+model Settlement {
+  orderId       String  @id
+  order         Order   @relation(fields: [orderId], references: [id])
+  outcome       String
+  pnl           Decimal @db.Decimal(36, 8)
+  solanaTx      String?
+  tempoPayoutTx String?
+  memoHash      String? @unique
+}
+
+model Hedge {
+  orderId        String  @id
+  order          Order   @relation(fields: [orderId], references: [id])
+  stockToken     String
+  amountIn       Decimal @db.Decimal(36, 18)
+  amountOut      Decimal @db.Decimal(36, 18)
+  uniswapTx      String
+  chainlinkRound String
+}
+
+model AgentSession {
+  id             String  @id @default(cuid())
+  ownerId        String
+  owner          User    @relation(fields: [ownerId], references: [id])
+  agentPubkey    String  @unique
+  capUsd         Decimal @db.Decimal(18, 6)
+  spentUsd       Decimal @default(0) @db.Decimal(18, 6)
+  tempoSessionId String?
+}
+
+model Receipt {
+  id          String     @id @default(cuid())
+  kind        String
+  payloadHash String     @unique
+  proofRef    String?
+  visibility  Visibility @default(private)
+  createdAt   DateTime   @default(now())
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@tyr/spike-s4-hyperliquid",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "markets": "tsx list-markets.ts",
+    "order": "tsx order-cancel.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nktkas/hyperliquid": "latest",
+    "viem": "^2.21.0"
+  }
+}
