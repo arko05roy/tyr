@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-05)
+## Progress (updated 2026-10-06)
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -235,11 +235,11 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 **Package:** `packages/hyperliquid`
 
-4.1 **Info client:** `meta`, `spotMeta`, outcome-market listing (HIP-4 info endpoint — read official docs), L2 book, user fills, order status, via `POST /info`.
-4.2 **Exchange client:** EIP-712 signing with the approved agent key; `order` with `builder: { b: TYR_BUILDER_ADDRESS, f: feeTenthsBps }`; `cancel`; `approveBuilderFee` signed by the master key (one-time per user/sub-account).
-4.3 **Account model:** one HL testnet sub-account per tyr user (or a pooled float with internal ledger — pick sub-accounts if testnet allows creation; else pooled). Funding moves from the HL float, matched 1:1 to the user's Solana confidential debit.
-4.4 **Fill & resolution watcher:** WS `userFills` and `orderUpdates`; on market resolution enqueue settlement (Phase 5).
-4.5 **Builder fee accounting:** read builder fee earned via `referral`/builder info endpoint; expose `/api/admin/revenue`.
+✅ 4.1 **Info client:** `meta`, `spotMeta`, outcome-market listing (HIP-4 info endpoint — read official docs), L2 book, user fills, order status, via `POST /info`. — `packages/hyperliquid/src/info.ts`; featured = unresolved + two-sided (auto)
+✅ 4.2 **Exchange client:** EIP-712 signing with the approved agent key; `order` with `builder: { b: TYR_BUILDER_ADDRESS, f: feeTenthsBps }`; `cancel`; `approveBuilderFee` signed by the master key (one-time per user/sub-account). — `PaperExecutor` (default, simulated) / `LiveExecutor` (needs testnet USDC); builder fee proof ⚠️ deferred
+✅ 4.3 **Account model:** one HL testnet sub-account per tyr user (or a pooled float with internal ledger — pick sub-accounts if testnet allows creation; else pooled). Funding moves from the HL float, matched 1:1 to the user's Solana confidential debit. — **pooled float + ledger** chosen (Stop 4)
+✅ 4.4 **Fill & resolution watcher:** WS `userFills` and `orderUpdates`; on market resolution enqueue settlement (Phase 5). — `ResolutionWatcher` (resolved = delisted, expired = past deadline) + `subscribeFloat` WS (live mode)
+✅ 4.5 **Builder fee accounting:** read builder fee earned via `referral`/builder info endpoint; expose `/api/admin/revenue`. — `/api/admin/revenue` (HL rewards + ledger live/simulated split)
 
 🛑 **HUMAN STOP 4** ✅ resolved (see `docs/human-values.md`)
 
@@ -252,9 +252,9 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 **Tests (live HL testnet):**
 
-- `hl.info.test.ts`: lists markets, returns a book with non-empty levels for each featured market.
-- `hl.order.test.ts`: approve builder fee → place a marketable IOC order of minimum size → assert fill → assert fill record includes `builderFee > 0`.
-- `hl.cancel.test.ts`: resting limit order far from mid → cancel → status `canceled`.
+- ✅ `hl.info.test.ts`: lists markets, returns a book with non-empty levels for each featured market.
+- ⚠️ `hl.order.test.ts`: approve builder fee → place a marketable IOC order of minimum size → assert fill → assert fill record includes `builderFee > 0`. — passes in paper mode (fill + fee from live book); real builder-fee fill pending testnet USDC
+- ✅ `hl.cancel.test.ts`: resting limit order far from mid → cancel → status `canceled`.
 
 ---
 
@@ -268,13 +268,13 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 **Service:** `services/api` + `services/workers`
 
-5.1 `POST /api/bets` → validate market, check Tempo limit via on-chain spend (Phase 2.4) → debit: Tempo stablecoin to treasury under the session key **and** confidential transfer user → escrow on Solana (Phase 3) → `open_position` → place HL order (Phase 4) → persist `Order`.
+✅ 5.1 `POST /api/bets` → validate market, check Tempo limit via on-chain spend (Phase 2.4) → debit: Tempo stablecoin to treasury under the session key **and** confidential transfer user → escrow on Solana (Phase 3) → `open_position` → place HL order (Phase 4) → persist `Order`. — `packages/pipeline/src/bet.ts`; optional `maxPrice`; HL $10 min enforced
 _Choose one source of truth for user funds:_ **Solana confidential balance is the bankroll**; the Tempo session spend is the _limit enforcement_ leg (a small per-bet "stake authorization" transfer to the treasury which is refunded/credited back on settlement). Document this clearly.
-5.2 **Settlement worker:** on resolution → compute payout → `settle_position` → confidential transfer escrow → user → **Tempo payout with memo** (Flow A step 7).
-5.3 Idempotency keys on every step; saga with compensations (refund on HL rejection).
-5.4 WebSocket `/ws` streams order + settlement status to the client.
+✅ 5.2 **Settlement worker:** on resolution → compute payout → `settle_position` → confidential transfer escrow → user → **Tempo payout with memo** (Flow A step 7). — `settle.ts` + BullMQ repeatable tick (`services/workers`); multi-round close, no write-offs
+✅ 5.3 Idempotency keys on every step; saga with compensations (refund on HL rejection). — `idempotencyKey` + persisted `Order.step`; refund compensation live-tested
+✅ 5.4 WebSocket `/ws` streams order + settlement status to the client. — `/ws` per-user event stream
 
-**Tests (live, all chains):** `e2e.flowA.test.ts` — create user → set $20 limit → fund confidential balance (devnet) → bet $2 on featured HL testnet market → assert HL fill, Solana position PDA, Tempo stake tx → trigger settlement path (resolve via real resolution or close the position and settle at mark if markets don't resolve during tests — **real close order, not a fake outcome**) → assert Tempo memo payout. Over-limit bet → 402/blocked with on-chain revert evidence.
+✅ **Tests (live, all chains):** `e2e.flowA.test.ts` — create user → set $20 limit → fund confidential balance (devnet) → bet $2 on featured HL testnet market → assert HL fill, Solana position PDA, Tempo stake tx → trigger settlement path (resolve via real resolution or close the position and settle at mark if markets don't resolve during tests — **real close order, not a fake outcome**) → assert Tempo memo payout. Over-limit bet → 402/blocked with on-chain revert evidence. _Ran with $60 limit / $25 bet (HL $10 min), plus a no-fill refund bet and the on-chain remaining-limit check._
 
 ---
 
