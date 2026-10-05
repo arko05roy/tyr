@@ -11,8 +11,9 @@
 | 0 — Repo, config, guards | ✅ Done                     | Guard test green on live RPCs; Sepolia/Base/Arb RPCs optional until Phase 6                      |
 | 1 — Spikes               | ✅ Done (3 with deviations) | S1 ✅ live · S2 ⚠️ local regtest · S3 ✅ live · S4 ⚠️ execution simulated · S5 ⚠️ swap simulated |
 | 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                         |
-| 3 — Solana               | ⏭ Next                      | 🛑 Stop 3: auditor-key decision + program deploy key                                             |
-| 4–13                     | ⬜ Not started              |                                                                                                  |
+| 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest           |
+| 4 — Hyperliquid          | ⏭ Next                      | 🛑 Stop 4: builder fee rate + featured markets; execution simulated (no testnet USDC)            |
+| 5–13                     | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -197,7 +198,7 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 ---
 
-## Phase 3 — Solana: confidential bankroll + settlement program — ⏭ NEXT
+## Phase 3 — Solana: confidential bankroll + settlement program — ✅ DONE
 
 **Package:** `packages/solana`, **Program:** `programs/tyr_settlement`
 
@@ -212,7 +213,7 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
   Confidential token movement is done via Token-2022 CPI-free instructions in the same tx (CT instructions are client-assembled), linked by order_id.
   3.5 **Auditor decrypt endpoint** (for "prove a payout"): decrypt a transfer amount with the auditor key and return a signed attestation.
 
-🛑 **HUMAN STOP 3**
+🛑 **HUMAN STOP 3** ✅ resolved (auditor enabled, new deployer key, server-derived custody — see `docs/human-values.md`)
 
 | Value                                                         | Where to get it                                                                                  |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -228,7 +229,7 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 ---
 
-## Phase 4 — Hyperliquid: execution + builder fee
+## Phase 4 — Hyperliquid: execution + builder fee — ⏭ NEXT
 
 **Package:** `packages/hyperliquid`
 

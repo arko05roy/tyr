@@ -1,5 +1,5 @@
 {
-  "name": "@tyr/tempo",
+  "name": "@tyr/solana",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@simplewebauthn/server": "^13.1.1",
+    "@solana-program/system": "^0.15.0",
+    "@solana-program/token-2022": "^0.19.0",
+    "@solana/kit": "^8.4.0",
+    "@solana/zk-sdk": "^0.5.3",
     "@tyr/core": "workspace:*",
-    "@tyr/db": "workspace:*",
-    "viem": "^2.57.3"
+    "@tyr/db": "workspace:*"
   }
 }

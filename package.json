@@ -32,5 +32,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,json,md,yaml,yml}": "prettier --write"
+  },
+  "dependencies": {
+    "@tyr/solana": "workspace:*"
   }
 }
