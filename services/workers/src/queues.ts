@@ -4,8 +4,10 @@ import { Queue, Worker } from 'bullmq';
 import type { PrismaClient } from '@tyr/db';
 import type { Executor } from '@tyr/hyperliquid';
 import { settlementWorker } from '@tyr/pipeline';
+import { fundingWorker } from '@tyr/evm-deposits';
 
 export const SETTLEMENT_QUEUE = 'settlement';
+export const FUNDING_QUEUE = 'funding';
 
 const connection = (redisUrl: string) => {
   const u = new URL(redisUrl);
@@ -22,6 +24,30 @@ export async function startSettlement(
   const queue = new Queue(name, { connection: connection(opts.redisUrl) });
   await queue.upsertJobScheduler('tick', { every: opts.everyMs }, { name: 'tick' });
   const worker = new Worker(name, async () => ({ settled: await tick() }), {
+    connection: connection(opts.redisUrl),
+    concurrency: 1,
+  });
+  return {
+    queue,
+    worker,
+    close: async () => {
+      await worker.close();
+      await queue.obliterate({ force: true });
+      await queue.close();
+    },
+  };
+}
+
+/** PRD 6.2 funding router: repeatable scan + credit tick, concurrency 1 (no double mints). */
+export async function startFunding(
+  db: PrismaClient,
+  opts: { redisUrl: string; everyMs: number; queueName?: string },
+) {
+  const name = opts.queueName ?? FUNDING_QUEUE;
+  const tick = fundingWorker(db);
+  const queue = new Queue(name, { connection: connection(opts.redisUrl) });
+  await queue.upsertJobScheduler('tick', { every: opts.everyMs }, { name: 'tick' });
+  const worker = new Worker(name, () => tick(), {
     connection: connection(opts.redisUrl),
     concurrency: 1,
   });

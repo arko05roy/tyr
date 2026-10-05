@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tyr/evm-deposits':
+        specifier: workspace:*
+        version: link:packages/evm-deposits
       '@tyr/solana':
         specifier: workspace:*
         version: link:packages/solana
@@ -108,6 +111,33 @@ importers:
         specifier: ^6.1.0
         version: 6.19.3(typescript@5.9.3)
 
+  packages/evm-deposits:
+    dependencies:
+      '@solana-program/token':
+        specifier: ^0.9.0
+        version: 0.9.0(@solana/kit@8.4.0(typescript@5.9.3))
+      '@solana-program/token-2022':
+        specifier: ^0.19.0
+        version: 0.19.0(@solana/kit@8.4.0(typescript@5.9.3))(@solana/sysvars@8.4.0(typescript@5.9.3))(@solana/zk-sdk@0.5.3)
+      '@solana/kit':
+        specifier: ^8.4.0
+        version: 8.4.0(typescript@5.9.3)
+      '@tyr/db':
+        specifier: workspace:*
+        version: link:../db
+      '@tyr/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@tyr/solana':
+        specifier: workspace:*
+        version: link:../solana
+      '@tyr/tempo':
+        specifier: workspace:*
+        version: link:../tempo
+      viem:
+        specifier: ^2.57.3
+        version: 2.57.3(typescript@5.9.3)(zod@3.25.76)
+
   packages/hyperliquid:
     dependencies:
       '@nktkas/hyperliquid':
@@ -194,6 +224,9 @@ importers:
       '@tyr/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@tyr/evm-deposits':
+        specifier: workspace:*
+        version: link:../../packages/evm-deposits
       '@tyr/hyperliquid':
         specifier: workspace:*
         version: link:../../packages/hyperliquid
@@ -231,6 +264,9 @@ importers:
       '@tyr/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@tyr/evm-deposits':
+        specifier: workspace:*
+        version: link:../../packages/evm-deposits
       '@tyr/hyperliquid':
         specifier: workspace:*
         version: link:../../packages/hyperliquid
@@ -246,6 +282,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      viem:
+        specifier: ^2.57.3
+        version: 2.57.3(typescript@5.9.3)(zod@3.25.76)
 
   spikes/s3-tempo:
     dependencies:
@@ -1349,6 +1388,11 @@ packages:
     peerDependenciesMeta:
       '@solana/zk-sdk':
         optional: true
+
+  '@solana-program/token@0.9.0':
+    resolution: {integrity: sha512-vnZxndd4ED4Fc56sw93cWZ2djEeeOFxtaPS8SPf5+a+JZjKA/EnKqzbE1y04FuMhIVrLERQ8uR8H2h72eZzlsA==}
+    peerDependencies:
+      '@solana/kit': ^5.0
 
   '@solana-program/zk-elgamal-proof@0.4.0':
     resolution: {integrity: sha512-bf2Q3f25xcCNaLm/MR4lwoAguJzEW2eeLdrJb6rUjMcA63qcgyJOWl6To7Bn4e+0OyWBa+J7YP2BUhi//VPz3g==}
@@ -5045,6 +5089,10 @@ snapshots:
     optionalDependencies:
       '@solana/zk-sdk': 0.5.3
 
+  '@solana-program/token@0.9.0(@solana/kit@8.4.0(typescript@5.9.3))':
+    dependencies:
+      '@solana/kit': 8.4.0(typescript@5.9.3)
+
   '@solana-program/zk-elgamal-proof@0.4.0(@solana/kit@8.4.0(typescript@5.9.3))':
     dependencies:
       '@solana-program/system': 0.14.1(@solana/kit@8.4.0(typescript@5.9.3))
@@ -6435,7 +6483,7 @@ snapshots:
       eslint: 9.39.5(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.5(jiti@2.7.0))
@@ -6468,7 +6516,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -6483,7 +6531,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0

@@ -13,6 +13,7 @@
     "@fastify/websocket": "^11.3.3",
     "@tyr/core": "workspace:*",
     "@tyr/db": "workspace:*",
+    "@tyr/evm-deposits": "workspace:*",
     "@tyr/hyperliquid": "workspace:*",
     "@tyr/pipeline": "workspace:*",
     "@tyr/solana": "workspace:*",

@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';
 import { balanceRoutes, betRoutes } from './routes/bets.js';
+import { depositRoutes } from './routes/deposits.js';
 import { limitRoutes } from './routes/limits.js';
 import { marketRoutes } from './routes/markets.js';
 import { sponsorRoutes } from './routes/sponsor.js';
@@ -31,6 +32,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(adminRoutes, { prefix: '/api/admin' });
   await app.register(betRoutes(deps.executor ?? createExecutor()), { prefix: '/api/bets' });
   await app.register(balanceRoutes, { prefix: '/api/balance' });
+  await app.register(depositRoutes, { prefix: '/api/deposits' });
   await app.register(wsRoutes);
   return app;
 }

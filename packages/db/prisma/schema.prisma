@@ -36,6 +36,7 @@ model User {
   lossLimits           LossLimit[]
   confidentialAccount  ConfidentialAccount?
   deposits             Deposit[]
+  depositAddresses     DepositAddress[]
   orders               Order[]
   agentSessions        AgentSession[]
 }
@@ -75,8 +76,40 @@ model Deposit {
   solanaTx    String?
   createdAt   DateTime @default(now())
 
-  @@unique([sourceChain, sourceTx])
+  // Phase 6: funding router. amount = USD credited (tyrUSD). status: confirmed → minted → credited.
+  asset       String   @default("USDC") // USDC | ETH | AlphaUSD
+  logIndex    Int      @default(-1) // log index of the ERC-20/TIP-20 transfer; -1 for native ETH / Solana
+  rawAmount   String? // source-chain base units (wei, 6-dec USDC, …)
+  fxRate      Decimal? @db.Decimal(36, 8) // ETH/USD used (Chainlink Sepolia)
+  fxRound     String? // Chainlink roundId the rate came from
+  mintTx      String? // treasury tyrUSD mint into the user's ATA (public)
+  creditedAt  DateTime?
+
+  @@unique([sourceChain, sourceTx, logIndex])
   @@index([userId])
+  @@index([status])
+}
+
+/// Per-user deposit endpoints (PRD 6.1, 6.3, 6.4). evm: HD-derived EOA (same on every EVM testnet);
+/// solana: CT owner address (devnet USDC lands in its classic-SPL ATA); tempo: memo32 for the treasury.
+model DepositAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  chain     String // evm | solana | tempo
+  address   String
+  hdIndex   Int?     @unique
+  createdAt DateTime @default(now())
+
+  @@unique([userId, chain])
+  @@unique([chain, address])
+}
+
+/// Watcher cursors (last scanned block / signature per source).
+model ScanCursor {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model ZcashOrder {

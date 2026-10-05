@@ -8,14 +8,15 @@
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
-| 0 — Repo, config, guards | ✅ Done                     | Guard test green on live RPCs; Sepolia/Base/Arb RPCs optional until Phase 6                      |
+| 0 — Repo, config, guards | ✅ Done                     | Guard test green on live RPCs; Sepolia/Base/Arb RPCs now required                                |
 | 1 — Spikes               | ✅ Done (3 with deviations) | S1 ✅ live · S2 ⚠️ local regtest · S3 ✅ live · S4 ⚠️ execution simulated · S5 ⚠️ swap simulated |
 | 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                         |
 | 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest           |
 | 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                   |
 | 5 — Flow A orchestration | ✅ Done                     | e2e Flow A + live refund path green (24/24); BullMQ settlement; HL $10 min mirrored              |
-| 6 — Funding router       | ⏭ Next                      | 🛑 Stop 6: Circle testnet USDC addresses, ETH FX rule                                            |
-| 7–13                     | ⬜ Not started              |                                                                                                  |
+| 6 — Funding router       | ✅ Done                     | Solana USDC, Tempo, RH ETH, API, worker green live; EVM USDC live tests waived (opt-in)          |
+| 7 — Zcash                | ⏭ Next                      | 🛑 Stop 7: lightwalletd, ZEC/USD rate source, FROST hosting                                      |
+| 8–13                     | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -278,17 +279,20 @@ _Choose one source of truth for user funds:_ **Solana confidential balance is th
 
 ---
 
-## Phase 6 — Funding router (EVM testnets + Solana devnet + Tempo)
+## Phase 6 — Funding router (EVM testnets + Solana devnet + Tempo) — ✅ DONE
 
-**Package:** `packages/evm-deposits`
+> Built as `packages/evm-deposits` (all sources, despite the name), API `/api/deposits/addresses`, `/api/deposits`, `POST /api/deposits/claim`, `/ws` `deposit` events, and a BullMQ funding tick (`pnpm --filter @tyr/workers funding`).
+> Deposit lifecycle: `confirmed` → `minted` (treasury mints public tyrUSD) → `credited` (CT deposit + apply). Each step's tx is persisted, so a retry never mints twice.
+> USDC is found by watchers: EVM `Transfer` logs at head − N, finalized Solana ATA signatures, and Tempo `TransferWithMemo` to the treasury. **ETH is claimed by tx hash** and verified on-chain (decision in `docs/human-values.md`).
+> Deposit EOAs are HD-derived and funds are not swept. tyr custodies the keys, which is disclosed.
 
-6.1 Per-user deposit addresses: CREATE2 forwarder or HD-derived EOAs on Sepolia, Base Sepolia, Arb Sepolia. Accept testnet USDC (Circle testnet USDC addresses) and ETH.
-6.2 Watcher: confirmations threshold per chain; on confirm, mint/transfer `tyrUSD` on devnet from treasury → user confidential `deposit` + `applyPendingBalance`.
-6.3 Solana devnet direct deposit: user sends devnet USDC to deposit ATA (Phantom).
-6.4 Tempo → Solana: user sends stablecoin with memo = userId-hash to tyr Tempo treasury → credit confidential balance.
-6.5 Robinhood Chain testnet as funding source: same watcher pattern for test ETH/stablecoin.
+✅ 6.1 Per-user deposit addresses: CREATE2 forwarder or HD-derived EOAs on Sepolia, Base Sepolia, Arb Sepolia. Accept testnet USDC (Circle testnet USDC addresses) and ETH.
+✅ 6.2 Watcher: confirmations threshold per chain; on confirm, mint/transfer `tyrUSD` on devnet from treasury → user confidential `deposit` + `applyPendingBalance`.
+✅ 6.3 Solana devnet direct deposit: user sends devnet USDC to deposit ATA (Phantom).
+✅ 6.4 Tempo → Solana: user sends stablecoin with memo = userId-hash to tyr Tempo treasury → credit confidential balance.
+✅ 6.5 Robinhood Chain testnet as funding source: test ETH only (no stablecoin on RH testnet), claimed by tx hash and priced with Chainlink.
 
-🛑 **HUMAN STOP 6**
+🛑 **HUMAN STOP 6** ✅ resolved (see `docs/human-values.md`)
 
 | Value                                                                                 | Where to get it                                                                                             |
 | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -297,6 +301,12 @@ _Choose one source of truth for user funds:_ **Solana confidential balance is th
 | FX rule for ETH deposits (price source)                                               | human decides: Chainlink testnet ETH/USD feed address (docs.chain.link → data feeds → Sepolia) or USDC-only |
 
 **Tests:** `deposit.<chain>.test.ts` for each source — send real testnet USDC from a test wallet → assert confidential balance increases (decrypt with owner key) and `Deposit.status = credited`.
+
+- ✅ `deposit.tempo.test.ts` — live, Moderato → devnet
+- ✅ `deposit.eth.test.ts` (robinhood) — live, Chainlink-priced
+- ✅ `api.deposits.test.ts`, `funding.queue.test.ts` — live
+- ✅ `deposit.solana.test.ts` — live devnet USDC → credited
+- ⏭ `deposit.evm.test.ts` (Sepolia / Base / Arb USDC) + sepolia ETH — owner-waived, opt-in via `RUN_EVM_USDC_TESTS=1`
 
 ---
 

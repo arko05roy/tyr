@@ -110,15 +110,12 @@ export async function checkZcash(endpoint: string): Promise<GuardCheck> {
 }
 
 export async function runTestnetGuard(cfg: Config): Promise<GuardCheck[]> {
-  const optional = [
-    ['sepolia', cfg.SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.sepolia],
-    ['base-sepolia', cfg.BASE_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.baseSepolia],
-    ['arb-sepolia', cfg.ARB_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.arbSepolia],
-  ] as const;
   return Promise.all([
     checkEvm('tempo', cfg.TEMPO_RPC_URL, cfg.TEMPO_CHAIN_ID),
     checkEvm('robinhood', cfg.ROBINHOOD_RPC_URL, cfg.ROBINHOOD_CHAIN_ID),
-    ...optional.flatMap(([n, rpc, id]) => (rpc ? [checkEvm(n, rpc, id)] : [])),
+    checkEvm('sepolia', cfg.SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.sepolia),
+    checkEvm('base-sepolia', cfg.BASE_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.baseSepolia),
+    checkEvm('arb-sepolia', cfg.ARB_SEPOLIA_RPC, EVM_TESTNET_CHAIN_IDS.arbSepolia),
     checkSolana(cfg.SOLANA_RPC_URL),
     checkHyperliquid(cfg.HL_API_URL),
     checkZcash(cfg.ZCASH_LIGHTWALLETD_URL),

@@ -1,9 +1,17 @@
-// PRD 5.4: in-process bus; /ws fans these out to the owning user's sockets.
+// PRD 5.4 / 6.2: in-process bus; /ws fans these out to the owning user's sockets.
 import { EventEmitter } from 'node:events';
 
 export type PipelineEvent =
   | { type: 'order'; userId: string; orderId: string; step: string; status: string }
-  | { type: 'settlement'; userId: string; orderId: string; outcome: string; payoutUsd: number };
+  | { type: 'settlement'; userId: string; orderId: string; outcome: string; payoutUsd: number }
+  | {
+      type: 'deposit';
+      userId: string;
+      depositId: string;
+      sourceChain: string;
+      status: string;
+      amountUsd: number;
+    };
 
 class Bus extends EventEmitter<{ event: [PipelineEvent] }> {}
 export const bus = new Bus();

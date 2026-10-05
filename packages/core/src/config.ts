@@ -25,10 +25,10 @@ export const configSchema = z.object({
   ROBINHOOD_RPC_URL: url,
   ROBINHOOD_CHAIN_ID: chainId,
 
-  // Deposit-source chains (Phase 6) — optional until then; guarded only when set.
-  SEPOLIA_RPC: url.optional(),
-  BASE_SEPOLIA_RPC: url.optional(),
-  ARB_SEPOLIA_RPC: url.optional(),
+  // Deposit-source chains (Phase 6 funding router).
+  SEPOLIA_RPC: url,
+  BASE_SEPOLIA_RPC: url,
+  ARB_SEPOLIA_RPC: url,
 });
 
 export type Config = z.infer<typeof configSchema>;
