@@ -10,9 +10,10 @@
   },
   "dependencies": {
     "@tyr/db": "workspace:*",
-    "@tyr/tempo": "workspace:*",
-    "dotenv": "^16.4.7",
     "@tyr/hyperliquid": "workspace:*",
-    "@tyr/pipeline": "workspace:*"
+    "@tyr/pipeline": "workspace:*",
+    "@tyr/tempo": "workspace:*",
+    "bullmq": "^5.81.5",
+    "dotenv": "^16.4.7"
   }
 }

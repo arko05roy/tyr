@@ -31,9 +31,12 @@ export async function placeOrder(
   exec: Executor,
   userId: string,
   req: OrderRequest,
+  link: { parentId?: string } = {},
 ) {
   const r = await exec.place(req);
-  return db.order.create({ data: { userId, ...requestFields(req), ...resultFields(r) } });
+  return db.order.create({
+    data: { userId, ...requestFields(req), ...resultFields(r), parentId: link.parentId ?? null },
+  });
 }
 
 /** Execute an already-persisted `pending` Order (Flow A saga creates the row before any chain write). */

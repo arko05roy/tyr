@@ -124,6 +124,7 @@ model Order {
   escrowTx       String? // final sig of confidential transfer user → escrow
   solanaOpenTx   String?
   error          String?
+  parentId       String? // close orders point at the bet they unwind
 
   settlement Settlement?
   hedge      Hedge?
@@ -144,7 +145,8 @@ model Settlement {
   payoutUsd    Decimal  @default(0) @db.Decimal(18, 6)
   payoutSalt   String?
   escrowPayTx  String? // confidential transfer escrow → user (absent when payout is 0)
-  closeOrderId String? // the close-at-mark Order, when settled by closing
+  closeOrderId String? // last close-at-mark Order (all closes: Order.parentId = this orderId)
+  escrowTopUpTx String? // house-float top-up into escrow, when stakes didn't cover the payout
   createdAt    DateTime @default(now())
 }
 

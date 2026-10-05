@@ -21,8 +21,8 @@ describe(`hl.order (live testnet, ${exec.mode})`, () => {
     const { user } = await registerUser();
     const m = await firstFeatured();
     const ask = must((await l2Book(m.yes.coin)).levels[1][0], 'best ask');
-    // ≥ $10 notional (HL minimum), capped at the top level so it is fully marketable.
-    const sz = Math.min(Number(ask.sz), Math.ceil(11 / Number(ask.px)));
+    // ≥ $10 order value (HL minimum); may walk past the top level, partial fills are fine.
+    const sz = Math.ceil(11 / Number(ask.px));
 
     const order = await placeOrder(db, exec, user.id, {
       outcome: m.outcome,

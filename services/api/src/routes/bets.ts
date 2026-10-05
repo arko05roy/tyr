@@ -16,6 +16,7 @@ const Bet = z.object({
   side: z.enum(['yes', 'no']),
   stakeUsd: z.number().positive().max(1_000),
   idempotencyKey: z.string().min(8).max(128),
+  maxPrice: z.number().gt(0).lt(1).optional(),
 });
 
 const STATUS = { market: 400, size: 400, balance: 409, limit: 402 } as const;

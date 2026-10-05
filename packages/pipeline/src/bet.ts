@@ -10,6 +10,7 @@
 // settled on Solana as `refunded`.
 import type { PrismaClient } from '@tyr/db';
 import {
+  MIN_ORDER_USD,
   bookFor,
   builderCode,
   executeOrder,
@@ -37,6 +38,8 @@ export type BetInput = {
   side: 'yes' | 'no';
   stakeUsd: number;
   idempotencyKey: string;
+  /** worst price per contract the user accepts (0–1); defaults to best ask + 2% */
+  maxPrice?: number | undefined;
 };
 
 export class BetRejectedError extends Error {
@@ -62,9 +65,11 @@ async function quote(input: BetInput) {
     throw new BetRejectedError(`outcome ${input.outcome} is not a featured live market`, 'market');
   const ask = (await bookFor(input.outcome, sideIndex(input.side))).levels[1][0];
   if (!ask) throw new BetRejectedError('no asks on that side', 'market');
-  const limitPx = Math.min(0.999, Number((Number(ask.px) * (1 + MAX_SLIPPAGE)).toFixed(4)));
+  const slipped = Math.min(0.999, Number((Number(ask.px) * (1 + MAX_SLIPPAGE)).toFixed(4)));
+  const limitPx = Math.min(slipped, input.maxPrice ?? 1);
   const sz = sizeFor(input.stakeUsd, limitPx, builderCode().f);
-  if (sz < 1) throw new BetRejectedError(`stake too small for 1 contract at ${limitPx}`, 'size');
+  if (sz * limitPx < MIN_ORDER_USD)
+    throw new BetRejectedError(`Hyperliquid minimum order is $${MIN_ORDER_USD}`, 'size');
   return { limitPx, sz };
 }
 
@@ -155,7 +160,12 @@ export async function placeBet(db: PrismaClient, exec: Executor, input: BetInput
     };
     order = await executeOrder(db, exec, id, req);
     await advance('executed');
-    if (Number(order.filledSize) === 0) await refundOrder(db, id, 'no fill on Hyperliquid');
+    if (Number(order.filledSize) === 0)
+      await refundOrder(
+        db,
+        id,
+        `no fill on Hyperliquid (${order.status}${order.execution && typeof order.execution === 'object' && 'error' in order.execution ? `: ${String(order.execution.error)}` : ''})`,
+      );
   }
 
   return db.order.findUniqueOrThrow({ where: { id }, include: { settlement: true } });

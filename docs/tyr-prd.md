@@ -13,7 +13,7 @@
 | 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                         |
 | 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest           |
 | 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                   |
-| 5 — Flow A orchestration | ✅ Done                     | e2e Flow A green over HTTP+WS (23/23 suite); compensation path coded, not live-tested            |
+| 5 — Flow A orchestration | ✅ Done                     | e2e Flow A + live refund path green (24/24); BullMQ settlement; HL $10 min mirrored              |
 | 6 — Funding router       | ⏭ Next                      | 🛑 Stop 6: Circle testnet USDC addresses, ETH FX rule                                            |
 | 7–13                     | ⬜ Not started              |                                                                                                  |
 
@@ -260,11 +260,11 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 ## Phase 5 — Core pipeline orchestration (Flow A end-to-end) — ✅ DONE
 
-> Built as `packages/pipeline` (saga + settlement + worker tick), API `/api/bets`, `/api/balance`, `/ws`, worker `pnpm --filter @tyr/workers settlement`.
-> Money model: Solana CT balance = bankroll; Tempo stake authorization is refunded with a memo payout on settlement.
-> Payout = proceeds + unspent stake. Escrow shortfalls are topped up by the treasury (tyrUSD mint authority = house float).
-> Close-at-mark sells into the live bid book within 10% slippage; any unabsorbed contracts are valued at 0.
-> Settlement loop is a polling worker (not BullMQ yet).
+> Built as `packages/pipeline` (saga + settlement + worker tick), API `/api/bets` (optional `maxPrice`), `/api/balance`, `/ws`; settlement tick is a BullMQ repeatable job (`pnpm --filter @tyr/workers settlement`, concurrency 1).
+> Money model: Solana CT balance = bankroll. Tempo stake authorization is refunded with a memo payout on settlement. The access-key allowance stays consumed, so the **loss limit caps gross stakes per period**; this is chain-enforced and verified in e2e.
+> Payout = proceeds + unspent stake. When stakes in escrow don't cover a payout, the treasury tops up escrow (house float). The top-up tx is recorded on `Settlement.escrowTopUpTx`.
+> HL's $10 minimum order value is enforced in paper mode too, so bets below it get a 400. Close-at-mark sells in up to 3 rounds against fresh books; anything unsold stays open and is retried each tick or settled at resolution. Nothing is written off.
+> Compensation (no fill → refund on Tempo + Solana, position settled `refunded`) is live-tested via a `maxPrice` below the ask.
 
 **Service:** `services/api` + `services/workers`
 

@@ -40,16 +40,18 @@ export async function availableBalance(keys: UserKeys): Promise<bigint> {
 /**
  * Escrow must hold `amount` available before paying out. Stakes land as pending credits; if
  * those don't cover a winning payout, the treasury (tyrUSD mint authority = house float) tops up.
+ * The top-up's deposit tx is returned so the settlement records exactly when the house paid.
  */
-export async function ensureEscrowLiquidity(amount: bigint): Promise<UserKeys> {
+export async function ensureEscrowLiquidity(
+  amount: bigint,
+): Promise<{ escrow: UserKeys; topUpTx: string | null }> {
   const escrow = await escrowKeys();
   await createConfidentialAccount(escrow);
   const have = await availableBalance(escrow);
-  if (have < amount) {
-    const topUp = amount - have;
-    await mintPublic(await ataOf(escrow.owner.address), topUp);
-    await deposit(escrow, topUp);
-    await applyPending(escrow);
-  }
-  return escrow;
+  if (have >= amount) return { escrow, topUpTx: null };
+  const topUp = amount - have;
+  await mintPublic(await ataOf(escrow.owner.address), topUp);
+  const topUpTx = await deposit(escrow, topUp);
+  await applyPending(escrow);
+  return { escrow, topUpTx };
 }

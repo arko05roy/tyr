@@ -46,6 +46,19 @@ export interface Executor {
   }): Promise<{ ok: boolean }>;
 }
 
+/** HL rejects any order whose value (sz × limit px) is below $10 — paper mode mirrors the venue. */
+export const MIN_ORDER_USD = 10;
+
+const rejected = (simulated: boolean, error: string): ExecResult => ({
+  simulated,
+  status: 'rejected',
+  filledSz: 0,
+  avgPx: 0,
+  notionalUsd: 0,
+  builderFeeUsd: 0,
+  error,
+});
+
 const statusOf = (filled: number, requested: number): ExecStatus =>
   filled <= 0 ? 'canceled' : filled + 1e-9 >= requested ? 'filled' : 'partial';
 
@@ -54,6 +67,8 @@ export class PaperExecutor implements Executor {
 
   async place(req: OrderRequest): Promise<ExecResult> {
     const { f } = builderCode();
+    if (req.sz * req.limitPx < MIN_ORDER_USD)
+      return rejected(true, `Order must have minimum value of $${MIN_ORDER_USD}`);
     const book = await l2Book(outcomeCoin(req.outcome, req.side));
     const levels = req.isBuy ? book.levels[1] : book.levels[0];
     const crosses = (px: number) => (req.isBuy ? px <= req.limitPx : px >= req.limitPx);
@@ -164,15 +179,7 @@ export class LiveExecutor implements Executor {
         fillHashes: fills.map((x) => x.hash),
       };
     } catch (err) {
-      return {
-        simulated: false,
-        status: 'rejected',
-        filledSz: 0,
-        avgPx: 0,
-        notionalUsd: 0,
-        builderFeeUsd: 0,
-        error: (err as Error).message,
-      };
+      return rejected(false, (err as Error).message);
     }
   }
 
