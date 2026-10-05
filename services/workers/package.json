@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "tempo-indexer": "tsx src/tempo-indexer.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "settlement": "tsx src/settlement.ts"
   },
   "dependencies": {
     "@tyr/db": "workspace:*",
     "@tyr/tempo": "workspace:*",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "@tyr/hyperliquid": "workspace:*",
+    "@tyr/pipeline": "workspace:*"
   }
 }

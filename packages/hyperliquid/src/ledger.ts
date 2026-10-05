@@ -7,6 +7,25 @@ import type { ExecResult, Executor, OrderRequest } from './executor.js';
 
 const SIDE = ['yes', 'no'] as const;
 
+const resultFields = (r: ExecResult) => ({
+  hlOid: r.oid !== undefined ? BigInt(r.oid) : null,
+  filledSize: r.filledSz,
+  avgPx: r.filledSz ? r.avgPx : null,
+  builderFee: r.builderFeeUsd,
+  status: r.status,
+  simulated: r.simulated,
+  execution: r as unknown as object,
+});
+
+const requestFields = (req: OrderRequest) => ({
+  hlMarket: String(req.outcome),
+  side: SIDE[req.side],
+  isBuy: req.isBuy,
+  tif: req.tif,
+  size: req.sz,
+  price: req.limitPx,
+});
+
 export async function placeOrder(
   db: PrismaClient,
   exec: Executor,
@@ -14,23 +33,20 @@ export async function placeOrder(
   req: OrderRequest,
 ) {
   const r = await exec.place(req);
-  return db.order.create({
-    data: {
-      userId,
-      hlMarket: String(req.outcome),
-      side: SIDE[req.side],
-      isBuy: req.isBuy,
-      tif: req.tif,
-      size: req.sz,
-      price: req.limitPx,
-      hlOid: r.oid !== undefined ? BigInt(r.oid) : null,
-      filledSize: r.filledSz,
-      avgPx: r.filledSz ? r.avgPx : null,
-      builderFee: r.builderFeeUsd,
-      status: r.status,
-      simulated: r.simulated,
-      execution: r as unknown as object,
-    },
+  return db.order.create({ data: { userId, ...requestFields(req), ...resultFields(r) } });
+}
+
+/** Execute an already-persisted `pending` Order (Flow A saga creates the row before any chain write). */
+export async function executeOrder(
+  db: PrismaClient,
+  exec: Executor,
+  orderId: string,
+  req: OrderRequest,
+) {
+  const r = await exec.place(req);
+  return db.order.update({
+    where: { id: orderId },
+    data: { ...requestFields(req), ...resultFields(r) },
   });
 }
 

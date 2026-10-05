@@ -114,6 +114,17 @@ model Order {
   execution  Json?
   updatedAt  DateTime @default(now()) @updatedAt
 
+  // Phase 5: Flow A saga. `step` is the last completed step; each step's tx is persisted so a
+  // retry with the same idempotencyKey resumes instead of repeating chain writes.
+  idempotencyKey String?  @unique
+  step           String   @default("created")
+  stakeUsd       Decimal? @db.Decimal(18, 6)
+  stakeSalt      String? // hex salt of the size commitment on the Position PDA
+  tempoStakeTx   String?
+  escrowTx       String? // final sig of confidential transfer user → escrow
+  solanaOpenTx   String?
+  error          String?
+
   settlement Settlement?
   hedge      Hedge?
 
@@ -128,6 +139,13 @@ model Settlement {
   solanaTx      String?
   tempoPayoutTx String?
   memoHash      String? @unique
+
+  // Phase 5
+  payoutUsd    Decimal  @default(0) @db.Decimal(18, 6)
+  payoutSalt   String?
+  escrowPayTx  String? // confidential transfer escrow → user (absent when payout is 0)
+  closeOrderId String? // the close-at-mark Order, when settled by closing
+  createdAt    DateTime @default(now())
 }
 
 model Hedge {

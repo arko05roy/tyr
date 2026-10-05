@@ -9,14 +9,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tyr/core": "workspace:*",
-    "dotenv": "^16.4.7",
-    "fastify": "^5.2.0",
     "@fastify/cookie": "^11.0.2",
+    "@fastify/websocket": "^11.3.3",
+    "@tyr/core": "workspace:*",
     "@tyr/db": "workspace:*",
     "@tyr/hyperliquid": "workspace:*",
+    "@tyr/pipeline": "workspace:*",
+    "@tyr/solana": "workspace:*",
     "@tyr/tempo": "workspace:*",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.0",
     "viem": "^2.57.3",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2",
+    "ws": "^8.22.0"
   }
 }

@@ -17,16 +17,21 @@ export async function startSession(req: FastifyRequest, reply: FastifyReply, use
   });
 }
 
-/** Resolve the logged-in user or send 401. */
-export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
+/** The logged-in user, or null (no reply sent — used by /ws). */
+export async function sessionUser(req: FastifyRequest) {
   const raw = req.cookies[SESSION_COOKIE];
   const unsigned = raw ? req.unsignCookie(raw) : null;
-  if (!unsigned?.valid || !unsigned.value)
-    return reply.code(401).send({ error: 'unauthenticated' });
+  if (!unsigned?.valid || !unsigned.value) return null;
   const s = await req.server.db.session.findUnique({
     where: { id: unsigned.value },
     include: { user: true },
   });
-  if (!s || s.expiresAt < new Date()) return reply.code(401).send({ error: 'session expired' });
-  return s.user;
+  return s && s.expiresAt >= new Date() ? s.user : null;
+}
+
+/** Resolve the logged-in user or send 401. */
+export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
+  const user = await sessionUser(req);
+  if (!user) return reply.code(401).send({ error: 'unauthenticated' });
+  return user;
 }

@@ -1,0 +1,21 @@
+{
+  "name": "@tyr/pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@solana/kit": "^8.4.0",
+    "@tyr/core": "workspace:*",
+    "@tyr/db": "workspace:*",
+    "@tyr/hyperliquid": "workspace:*",
+    "@tyr/solana": "workspace:*",
+    "@tyr/tempo": "workspace:*",
+    "viem": "^2.57.3"
+  }
+}

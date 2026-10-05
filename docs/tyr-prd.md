@@ -13,8 +13,9 @@
 | 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                         |
 | 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest           |
 | 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                   |
-| 5 — Flow A orchestration | ⏭ Next                      |                                                                                                  |
-| 6–13                     | ⬜ Not started              |                                                                                                  |
+| 5 — Flow A orchestration | ✅ Done                     | e2e Flow A green over HTTP+WS (23/23 suite); compensation path coded, not live-tested            |
+| 6 — Funding router       | ⏭ Next                      | 🛑 Stop 6: Circle testnet USDC addresses, ETH FX rule                                            |
+| 7–13                     | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -257,7 +258,13 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 ---
 
-## Phase 5 — Core pipeline orchestration (Flow A end-to-end)
+## Phase 5 — Core pipeline orchestration (Flow A end-to-end) — ✅ DONE
+
+> Built as `packages/pipeline` (saga + settlement + worker tick), API `/api/bets`, `/api/balance`, `/ws`, worker `pnpm --filter @tyr/workers settlement`.
+> Money model: Solana CT balance = bankroll; Tempo stake authorization is refunded with a memo payout on settlement.
+> Payout = proceeds + unspent stake. Escrow shortfalls are topped up by the treasury (tyrUSD mint authority = house float).
+> Close-at-mark sells into the live bid book within 10% slippage; any unabsorbed contracts are valued at 0.
+> Settlement loop is a polling worker (not BullMQ yet).
 
 **Service:** `services/api` + `services/workers`
 
