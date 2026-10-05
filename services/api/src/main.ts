@@ -1,6 +1,7 @@
 import { config as loadDotenv } from 'dotenv';
-import Fastify from 'fastify';
+import { PrismaClient } from '@tyr/db';
 import { assertTestnets, loadConfigOrExit } from '@tyr/core';
+import { buildApp } from './app.js';
 
 loadDotenv({ path: new URL('../../../.env', import.meta.url) });
 const cfg = loadConfigOrExit();
@@ -13,6 +14,10 @@ try {
   process.exit(1);
 }
 
-const app = Fastify({ logger: true });
-app.get('/health', async () => ({ ok: true }));
+const secret = process.env.TYR_SECRETS_KEY;
+if (!secret) {
+  console.error('TYR_SECRETS_KEY missing');
+  process.exit(1);
+}
+const app = await buildApp({ db: new PrismaClient(), cookieSecret: secret, logger: true });
 await app.listen({ port: Number(process.env.PORT ?? 4000), host: '0.0.0.0' });

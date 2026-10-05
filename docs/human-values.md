@@ -43,3 +43,12 @@ Public parts only. Private keys live in `.env` / secrets manager, never here.
 | user   | `uregtest1lsg9ypg8r478vmv226f7je53c6de7w9lq5d974t0jcnu7nhjlk27h63egwvycjafrt75cneg8q3af0ck5t6rtc55p0nrrz436vexnc5u`                                                      |
 
 zingo-cli is built from zingolib with `--no-default-features --features nakednet-test-mode` (no Nym mixnet; required to reach a local server).
+
+## HUMAN STOP 2 values (defaults accepted by owner 2026-10-05)
+
+| Value                   | Setting                                                            | Source                                                   |
+| ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| Stablecoin              | AlphaUSD `0x20c0000000000000000000000000000000000001` (6 dp)       | Moderato faucet token (tempo.xyz/docs/quickstart/faucet) |
+| Access-key / keychain   | via `viem/tempo` `Actions.accessKey` (account keychain precompile) | viem 2.57.3                                              |
+| WebAuthn RP ID / origin | `localhost` / `http://localhost:3000`                              | owner default for dev; `tyr.bet` at Phase 12             |
+| MPP over HTTP 402       | not needed yet (Phase 8)                                           | —                                                        |

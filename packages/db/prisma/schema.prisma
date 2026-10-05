@@ -27,9 +27,12 @@ model User {
   id                  String   @id @default(cuid())
   tempoAddress        String   @unique
   passkeyCredentialId String   @unique
+  passkeyPublicKey    String // uncompressed P-256 (0x04‖x‖y); Tempo address derives from it
+  passkeyCounter      Int      @default(0)
   region              String?
   createdAt           DateTime @default(now())
 
+  sessions             Session[]
   lossLimits           LossLimit[]
   confidentialAccount  ConfidentialAccount?
   deposits             Deposit[]
@@ -43,8 +46,12 @@ model LossLimit {
   user             User        @relation(fields: [userId], references: [id])
   period           LimitPeriod
   amountUsd        Decimal     @db.Decimal(18, 6)
-  tempoAccessKeyId String
+  tempoAccessKeyId String // access key address on Tempo
+  accessKeyCipher  String // backend-held P-256 access key, AES-256-GCM (TYR_SECRETS_KEY)
+  token            String // TIP-20 the limit applies to
   expiresAt        DateTime
+  authorizedTx     String?
+  createdAt        DateTime    @default(now())
 
   @@index([userId])
 }
@@ -140,4 +147,48 @@ model Receipt {
   proofRef    String?
   visibility  Visibility @default(private)
   createdAt   DateTime   @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// WebAuthn challenges (single use, short TTL).
+model AuthChallenge {
+  id        String   @id @default(cuid())
+  challenge String   @unique
+  purpose   String // register | login
+  createdAt DateTime @default(now())
+}
+
+/// Indexed TIP-20 TransferWithMemo events touching tyr addresses (PRD 2.6).
+model TempoTransfer {
+  id           String   @id @default(cuid())
+  txHash       String
+  logIndex     Int
+  blockNumber  BigInt
+  token        String
+  from         String
+  to           String
+  amount       Decimal  @db.Decimal(36, 6)
+  memo         String
+  settlementId String?
+  createdAt    DateTime @default(now())
+
+  @@unique([txHash, logIndex])
+  @@index([memo])
+}
+
+/// memo32 → settlement mapping written when a payout is sent (PRD 2.5).
+model PayoutMemo {
+  memo         String   @id
+  settlementId String   @unique
+  txHash       String?
+  createdAt    DateTime @default(now())
 }

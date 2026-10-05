@@ -1,0 +1,17 @@
+{
+  "name": "@tyr/tempo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.1.1",
+    "@tyr/db": "workspace:*",
+    "viem": "^2.57.3"
+  }
+}

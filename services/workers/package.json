@@ -1,0 +1,15 @@
+{
+  "name": "@tyr/workers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tempo-indexer": "tsx src/tempo-indexer.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tyr/db": "workspace:*",
+    "@tyr/tempo": "workspace:*",
+    "dotenv": "^16.4.7"
+  }
+}

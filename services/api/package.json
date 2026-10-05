@@ -11,6 +11,11 @@
   "dependencies": {
     "@tyr/core": "workspace:*",
     "dotenv": "^16.4.7",
-    "fastify": "^5.2.0"
+    "fastify": "^5.2.0",
+    "@fastify/cookie": "^11.0.2",
+    "@tyr/db": "workspace:*",
+    "@tyr/tempo": "workspace:*",
+    "viem": "^2.57.3",
+    "zod": "^3.24.1"
   }
 }

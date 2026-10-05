@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "declaration": true,
+    "declaration": false,
     "sourceMap": true
   }
 }
