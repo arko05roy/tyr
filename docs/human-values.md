@@ -30,3 +30,16 @@ Public parts only. Private keys live in `.env` / secrets manager, never here.
 | AMZN   | `0x5884aD2f920c162CFBbACc88C9C51AA75eC09E02` |
 | NFLX   | `0x3b8262A63d25f0477c4DDE23F83cfe22Cb768C93` |
 | PLTR   | `0x1FBE1a0e43594b3455993B5dE5Fd0A7A266298d0` |
+
+| Date       | Decision                                                                                                                                                                                                                                                                                      | Approved by                                   | Reason                                                                                                               |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | **Zcash runs on LOCAL REGTEST** (infra/zcash-regtest: zebrad 6.3.0 + zainod 0.10.1, the pair zingolib CI pins), not public testnet. Funds are self-mined; coinbase → tyr transparent addr → shielded via zingo `quickshield`. Same protocol/wallet code as testnet; txs not publicly visible. | Human (project owner): "do all stuff locally" | No reachable TAZ faucet; owner cannot use Discord. Switch back by pointing at testnet.zec.rocks:443 once TAZ exists. |
+
+## Zcash regtest wallets (seeds in .env only)
+
+| Wallet | Unified address (regtest)                                                                                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| tyr    | `uregtest126e6ddp8prwkskuaeumsv5zfkqjez7gawtuxlk0h98akq7txzswrlzhjq8csf0h3fwqhfqdz0tczslvjwdz8d54wn2kdmy03rsf24sah` (t-addr miner `tmFEiV49cx5aZE7yi4viW4d5nBRVja9CmE6`) |
+| user   | `uregtest1lsg9ypg8r478vmv226f7je53c6de7w9lq5d974t0jcnu7nhjlk27h63egwvycjafrt75cneg8q3af0ck5t6rtc55p0nrrz436vexnc5u`                                                      |
+
+zingo-cli is built from zingolib with `--no-default-features --features nakednet-test-mode` (no Nym mixnet; required to reach a local server).

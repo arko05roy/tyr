@@ -1,0 +1,20 @@
+# Local Zcash regtest: zebrad (validator) + zainod (lightwalletd-compatible gRPC on :9067, plaintext).
+name: tyr-zcash-regtest
+services:
+  zebra:
+    image: zfnd/zebra:6.3.0
+    command: ['zebrad', '-c', '/etc/zebrad/zebrad.toml', 'start']
+    volumes:
+      - ./zebrad.generated.toml:/etc/zebrad/zebrad.toml:ro
+      - zebra-state:/home/zebra/.cache/zebra
+    ports: ['18232:18232']
+  zaino:
+    image: zingodevops/zaino:0.10.1-no-tls
+    platform: linux/amd64
+    command: ['start', '--config', '/etc/zaino/zainod.toml']
+    volumes:
+      - ./zainod.toml:/etc/zaino/zainod.toml:ro
+    ports: ['9067:9067']
+    depends_on: [zebra]
+volumes:
+  zebra-state:

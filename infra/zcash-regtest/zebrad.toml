@@ -1,0 +1,60 @@
+# Local Zcash REGTEST validator (owner sign-off 2026-10-05: no TAZ source without Discord).
+# Mirrors zingolabs/infrastructure zcash_local_net regtest config (rev 89cf104), pinned with zingolib CI.
+# All upgrades active at height 1 to match zingo-cli's regtest ActivationHeights::default().
+[consensus]
+checkpoint_sync = true
+
+[mempool]
+eviction_memory_time = "1h"
+tx_cost_limit = 80000000
+
+[network]
+cache_dir = false
+initial_mainnet_peers = []
+initial_testnet_peers = []
+listen_addr = "0.0.0.0:18233"
+network = "Regtest"
+
+[rpc]
+listen_addr = "0.0.0.0:18232"
+indexer_listen_addr = "0.0.0.0:18230"
+enable_cookie_auth = false
+parallel_cpu_threads = 0
+
+[state]
+cache_dir = "/home/zebra/.cache/zebra"
+ephemeral = false
+
+[tracing]
+use_color = false
+filter = "info"
+
+[health]
+listen_addr = "0.0.0.0:8080"
+min_connected_peers = 0
+enforce_on_test_networks = false
+
+[mining]
+# tyr wallet TRANSPARENT address (zingolib pattern): zingo cannot scan zebra 6.3 shielded
+# coinbase memos, so coinbase goes transparent and is then shielded with zingo-cli `quickshield`.
+miner_address = "MINER_ADDRESS"
+
+[network.testnet_parameters.activation_heights]
+Canopy = 1
+NU5 = 1
+NU6 = 1
+"NU6.1" = 1
+"NU6.2" = 1
+"NU6.3" = 1
+
+[[network.testnet_parameters.lockbox_disbursements]]
+address = "t2RnBRiqrN1nW4ecZs1Fj3WWjNdnSs4kiX8"
+amount = 1
+
+[network.testnet_parameters.post_nu6_funding_streams.height_range]
+start = 1
+end = 1000000
+
+[[network.testnet_parameters.post_nu6_funding_streams.recipients]]
+receiver = "Deferred"
+numerator = 1

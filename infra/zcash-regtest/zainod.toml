@@ -1,0 +1,13 @@
+backend = "fetch"
+network = "Regtest"
+
+[grpc_settings]
+listen_address = "0.0.0.0:9067"
+
+[validator_settings]
+validator_jsonrpc_listen_address = "zebra:18232"
+validator_user = "xxxxxx"
+validator_password = "xxxxxx"
+
+[storage]
+database.path = "/home/container_user/zaino"
