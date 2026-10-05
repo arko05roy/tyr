@@ -108,6 +108,18 @@ importers:
         specifier: ^6.1.0
         version: 6.19.3(typescript@5.9.3)
 
+  packages/hyperliquid:
+    dependencies:
+      '@nktkas/hyperliquid':
+        specifier: 0.33.3
+        version: 0.33.3(typescript@5.9.3)
+      '@tyr/db':
+        specifier: workspace:*
+        version: link:../db
+      viem:
+        specifier: ^2.57.3
+        version: 2.57.3(typescript@5.9.3)(zod@3.25.76)
+
   packages/solana:
     dependencies:
       '@solana-program/system':
@@ -155,6 +167,9 @@ importers:
       '@tyr/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@tyr/hyperliquid':
+        specifier: workspace:*
+        version: link:../../packages/hyperliquid
       '@tyr/tempo':
         specifier: workspace:*
         version: link:../../packages/tempo

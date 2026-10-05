@@ -104,6 +104,16 @@ model Order {
   status     String
   createdAt  DateTime @default(now())
 
+  // Phase 4: HL execution. hlMarket = outcome id; side = outcome side bought/sold.
+  isBuy      Boolean  @default(true)
+  tif        String   @default("Ioc")
+  filledSize Decimal  @default(0) @db.Decimal(36, 8)
+  avgPx      Decimal? @db.Decimal(36, 8)
+  /// true = paper fill against the live testnet book (owner-approved deviation); no oid/hash exists.
+  simulated  Boolean  @default(false)
+  execution  Json?
+  updatedAt  DateTime @default(now()) @updatedAt
+
   settlement Settlement?
   hedge      Hedge?
 

@@ -12,8 +12,9 @@
 | 1 — Spikes               | ✅ Done (3 with deviations) | S1 ✅ live · S2 ⚠️ local regtest · S3 ✅ live · S4 ⚠️ execution simulated · S5 ⚠️ swap simulated |
 | 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                         |
 | 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest           |
-| 4 — Hyperliquid          | ⏭ Next                      | 🛑 Stop 4: builder fee rate + featured markets; execution simulated (no testnet USDC)            |
-| 5–13                     | ⬜ Not started              |                                                                                                  |
+| 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                   |
+| 5 — Flow A orchestration | ⏭ Next                      |                                                                                                  |
+| 6–13                     | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -229,7 +230,7 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 
 ---
 
-## Phase 4 — Hyperliquid: execution + builder fee — ⏭ NEXT
+## Phase 4 — Hyperliquid: execution + builder fee — ✅ DONE (paper execution)
 
 **Package:** `packages/hyperliquid`
 
@@ -239,7 +240,7 @@ Record every value (public parts only) in `docs/human-values.md`. Private keys g
 4.4 **Fill & resolution watcher:** WS `userFills` and `orderUpdates`; on market resolution enqueue settlement (Phase 5).
 4.5 **Builder fee accounting:** read builder fee earned via `referral`/builder info endpoint; expose `/api/admin/revenue`.
 
-🛑 **HUMAN STOP 4**
+🛑 **HUMAN STOP 4** ✅ resolved (see `docs/human-values.md`)
 
 | Value                                      | Where to get it                                                                                                                                             |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
