@@ -1,0 +1,13 @@
+# Dependencies and generated build output
+web/node_modules/
+web/.next/
+web/out/
+web/build/
+
+# Local environment and machine-specific files
+.env*
+web/.env*
+.DS_Store
+
+# Nested local Git metadata
+web/.git/
