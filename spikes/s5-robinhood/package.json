@@ -1,0 +1,13 @@
+{
+  "name": "@tyr/spike-s5-robinhood",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "tsx run.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.57.3",
+    "dotenv": "^16.4.7"
+  }
+}

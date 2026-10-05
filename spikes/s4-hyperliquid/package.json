@@ -5,6 +5,7 @@
   "scripts": {
     "markets": "tsx list-markets.ts",
     "order": "tsx order-cancel.ts",
+    "paper": "tsx paper-run.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
