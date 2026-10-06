@@ -168,6 +168,27 @@ describe('API contract (PRD 11)', () => {
         .status,
     ).toBe(404);
 
+    // venues (HL live + simulated Polymarket / Kalshi / Limitless)
+    const venues = await api.GET('/api/venues');
+    expect(venues.data?.venues.map((v) => v.id)).toContain('hyperliquid');
+    const all = await api.GET('/api/venues/markets');
+    const vm = must(
+      all.data?.markets.find((x) => x.venue === 'kalshi'),
+      'kalshi market',
+    );
+    const vd = await api.GET('/api/venues/markets/{id}', { params: { path: { id: vm.id } } });
+    expect(vd.data?.books.no.asks.length).toBeGreaterThan(0);
+    expect(
+      (await api.GET('/api/venues/markets/{id}', { params: { path: { id: 'nowhere:1' } } }))
+        .response.status,
+    ).toBe(400);
+    const evs = await api.GET('/api/venues/events', { params: { query: { multiVenue: true } } });
+    const ev = must(evs.data?.events[0], 'multi-venue event');
+    const route = await api.POST('/api/venues/route', {
+      body: { eventKey: ev.eventKey, side: 'yes', stakeUsd: 500 },
+    });
+    expect(route.data?.contracts).toBeGreaterThan(0);
+
     // hedge (eligible region now)
     const offer = await api.GET('/api/hedge/markets/{marketId}', {
       params: { path: { marketId: m.outcome } },

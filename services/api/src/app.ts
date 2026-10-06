@@ -2,6 +2,7 @@ import cookie from '@fastify/cookie';
 import websocket from '@fastify/websocket';
 import { createExecutor, type Executor } from '@tyr/hyperliquid';
 import type { PrismaClient } from '@tyr/db';
+import type { VenueRegistry } from '@tyr/venues';
 import swagger from '@fastify/swagger';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { createJsonSchemaTransformObject, jsonSchemaTransform } from 'fastify-type-provider-zod';
@@ -15,6 +16,7 @@ import { hedgeRoutes } from './routes/hedge.js';
 import { limitRoutes } from './routes/limits.js';
 import { marketRoutes } from './routes/markets.js';
 import { receiptRoutes } from './routes/receipts.js';
+import { venueRoutes } from './routes/venues.js';
 import { sponsorRoutes } from './routes/sponsor.js';
 import { wsRoutes } from './routes/ws.js';
 import { zcashRoutes } from './routes/zcash.js';
@@ -26,6 +28,7 @@ export type AppDeps = {
   cookieSecret: string;
   logger?: boolean;
   executor?: Executor;
+  venues?: VenueRegistry;
   /** Response contract enforcement; defaults to 'strict' except in production. */
   responseCheck?: ResponseCheck;
 };
@@ -75,6 +78,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(sponsorRoutes, { prefix: '/api/tempo' });
   await app.register(limitRoutes, { prefix: '/api/limits' });
   await app.register(marketRoutes, { prefix: '/api/markets' });
+  await app.register(venueRoutes(deps.venues), { prefix: '/api/venues' });
   await app.register(adminRoutes, { prefix: '/api/admin' });
   const executor = deps.executor ?? createExecutor();
   await app.register(betRoutes(executor), { prefix: '/api/bets' });

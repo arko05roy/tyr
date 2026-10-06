@@ -731,6 +731,276 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/venues': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              venues: {
+                /** @enum {string} */
+                id: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+                name: string;
+                /** @enum {string} */
+                settlementChain: 'hypercore' | 'polygon' | 'solana' | 'base';
+                collateral: string;
+                /** @enum {string} */
+                mode: 'live' | 'simulated';
+                revenue: string;
+                minOrderUsd: number;
+              }[];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/venues/markets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Every market on every venue, one shape. Simulated venues are labeled by mode. */
+    get: {
+      parameters: {
+        query?: {
+          venue?: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+          category?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              markets: components['schemas']['UnifiedMarket'][];
+              errors: {
+                /** @enum {string} */
+                venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+                error: string;
+              }[];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/venues/markets/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          /** @description `venue:nativeId` */
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              market: components['schemas']['UnifiedMarket'];
+              books: {
+                yes: {
+                  bids: {
+                    px: number;
+                    sz: number;
+                  }[];
+                  asks: {
+                    px: number;
+                    sz: number;
+                  }[];
+                };
+                no: {
+                  bids: {
+                    px: number;
+                    sz: number;
+                  }[];
+                  asks: {
+                    px: number;
+                    sz: number;
+                  }[];
+                };
+              };
+            };
+          };
+        };
+        /** @description Error */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+        /** @description Error */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/venues/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Markets grouped by real-world question; multi-venue events first. */
+    get: {
+      parameters: {
+        query?: {
+          multiVenue?: boolean;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              events: components['schemas']['UnifiedEvent'][];
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/venues/route': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Best-execution quote: split a stake across venues by all-in price (fees included). */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            eventKey: string;
+            /** @enum {string} */
+            side: 'yes' | 'no';
+            stakeUsd: number;
+            maxPrice?: number;
+            venues?: ('hyperliquid' | 'polymarket' | 'kalshi' | 'limitless')[];
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['VenueRoute'];
+          };
+        };
+        /** @description Error */
+        404: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/admin/revenue': {
     parameters: {
       query?: never;
@@ -3110,6 +3380,79 @@ export interface components {
           [key: string]: unknown;
         };
       };
+    };
+    UnifiedMarket: {
+      /** @description venue:nativeId */
+      id: string;
+      /** @enum {string} */
+      venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+      nativeId: string;
+      title: string;
+      /** @enum {string} */
+      category: 'crypto' | 'macro' | 'finance' | 'politics' | 'sports' | 'culture' | 'other';
+      eventKey: string;
+      /** Format: date-time */
+      resolvesAt: string;
+      yes: {
+        bid: number;
+        ask: number;
+        mid: number;
+      };
+      liquidityUsd: number;
+    };
+    UnifiedEvent: {
+      eventKey: string;
+      title: string;
+      /** @enum {string} */
+      category: 'crypto' | 'macro' | 'finance' | 'politics' | 'sports' | 'culture' | 'other';
+      /** Format: date-time */
+      resolvesAt: string;
+      venues: {
+        /** @enum {string} */
+        venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+        marketId: string;
+        yesBid: number;
+        yesAsk: number;
+        liquidityUsd: number;
+      }[];
+      bestYesAsk: {
+        /** @enum {string} */
+        venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+        px: number;
+      };
+      bestNoAsk: {
+        /** @enum {string} */
+        venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+        px: number;
+      };
+      priceGap: number;
+    };
+    VenueRoute: {
+      eventKey: string;
+      /** @enum {string} */
+      side: 'yes' | 'no';
+      stakeUsd: number;
+      legs: {
+        /** @enum {string} */
+        venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+        marketId: string;
+        sz: number;
+        avgPx: number;
+        limitPx: number;
+        costUsd: number;
+        feeUsd: number;
+      }[];
+      contracts: number;
+      costUsd: number;
+      avgAllInPx: number;
+      singles: {
+        /** @enum {string} */
+        venue: 'hyperliquid' | 'polymarket' | 'kalshi' | 'limitless';
+        marketId: string;
+        contracts: number;
+        costUsd: number;
+      }[];
+      edgeVsWorst: number;
     };
     Hedge: {
       orderId: string;

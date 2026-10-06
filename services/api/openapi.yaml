@@ -432,6 +432,244 @@ components:
         - resolvesAt
         - books
       additionalProperties: false
+    UnifiedMarket:
+      type: object
+      properties:
+        id:
+          type: string
+          description: venue:nativeId
+        venue:
+          type: string
+          enum:
+            - hyperliquid
+            - polymarket
+            - kalshi
+            - limitless
+        nativeId:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+          enum:
+            - crypto
+            - macro
+            - finance
+            - politics
+            - sports
+            - culture
+            - other
+        eventKey:
+          type: string
+        resolvesAt:
+          type: string
+          format: date-time
+        "yes":
+          type: object
+          properties:
+            bid:
+              type: number
+            ask:
+              type: number
+            mid:
+              type: number
+          required:
+            - bid
+            - ask
+            - mid
+          additionalProperties: false
+        liquidityUsd:
+          type: number
+      required:
+        - id
+        - venue
+        - nativeId
+        - title
+        - category
+        - eventKey
+        - resolvesAt
+        - "yes"
+        - liquidityUsd
+      additionalProperties: false
+    UnifiedEvent:
+      type: object
+      properties:
+        eventKey:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+          enum:
+            - crypto
+            - macro
+            - finance
+            - politics
+            - sports
+            - culture
+            - other
+        resolvesAt:
+          type: string
+          format: date-time
+        venues:
+          type: array
+          items:
+            type: object
+            properties:
+              venue:
+                type: string
+                enum:
+                  - hyperliquid
+                  - polymarket
+                  - kalshi
+                  - limitless
+              marketId:
+                type: string
+              yesBid:
+                type: number
+              yesAsk:
+                type: number
+              liquidityUsd:
+                type: number
+            required:
+              - venue
+              - marketId
+              - yesBid
+              - yesAsk
+              - liquidityUsd
+            additionalProperties: false
+        bestYesAsk:
+          type: object
+          properties:
+            venue:
+              type: string
+              enum:
+                - hyperliquid
+                - polymarket
+                - kalshi
+                - limitless
+            px:
+              type: number
+          required:
+            - venue
+            - px
+          additionalProperties: false
+        bestNoAsk:
+          type: object
+          properties:
+            venue:
+              type: string
+              enum:
+                - hyperliquid
+                - polymarket
+                - kalshi
+                - limitless
+            px:
+              type: number
+          required:
+            - venue
+            - px
+          additionalProperties: false
+        priceGap:
+          type: number
+      required:
+        - eventKey
+        - title
+        - category
+        - resolvesAt
+        - venues
+        - bestYesAsk
+        - bestNoAsk
+        - priceGap
+      additionalProperties: false
+    VenueRoute:
+      type: object
+      properties:
+        eventKey:
+          type: string
+        side:
+          type: string
+          enum:
+            - "yes"
+            - "no"
+        stakeUsd:
+          type: number
+        legs:
+          type: array
+          items:
+            type: object
+            properties:
+              venue:
+                type: string
+                enum:
+                  - hyperliquid
+                  - polymarket
+                  - kalshi
+                  - limitless
+              marketId:
+                type: string
+              sz:
+                type: number
+              avgPx:
+                type: number
+              limitPx:
+                type: number
+              costUsd:
+                type: number
+              feeUsd:
+                type: number
+            required:
+              - venue
+              - marketId
+              - sz
+              - avgPx
+              - limitPx
+              - costUsd
+              - feeUsd
+            additionalProperties: false
+        contracts:
+          type: number
+        costUsd:
+          type: number
+        avgAllInPx:
+          type: number
+        singles:
+          type: array
+          items:
+            type: object
+            properties:
+              venue:
+                type: string
+                enum:
+                  - hyperliquid
+                  - polymarket
+                  - kalshi
+                  - limitless
+              marketId:
+                type: string
+              contracts:
+                type: number
+              costUsd:
+                type: number
+            required:
+              - venue
+              - marketId
+              - contracts
+              - costUsd
+            additionalProperties: false
+        edgeVsWorst:
+          type: number
+      required:
+        - eventKey
+        - side
+        - stakeUsd
+        - legs
+        - contracts
+        - costUsd
+        - avgAllInPx
+        - singles
+        - edgeVsWorst
+      additionalProperties: false
     Hedge:
       type: object
       properties:
@@ -1372,6 +1610,310 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/venues:
+    get:
+      tags:
+        - venues
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  venues:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          enum:
+                            - hyperliquid
+                            - polymarket
+                            - kalshi
+                            - limitless
+                        name:
+                          type: string
+                        settlementChain:
+                          type: string
+                          enum:
+                            - hypercore
+                            - polygon
+                            - solana
+                            - base
+                        collateral:
+                          type: string
+                        mode:
+                          type: string
+                          enum:
+                            - live
+                            - simulated
+                        revenue:
+                          type: string
+                        minOrderUsd:
+                          type: number
+                      required:
+                        - id
+                        - name
+                        - settlementChain
+                        - collateral
+                        - mode
+                        - revenue
+                        - minOrderUsd
+                      additionalProperties: false
+                required:
+                  - venues
+                additionalProperties: false
+  /api/venues/markets:
+    get:
+      tags:
+        - venues
+      description: Every market on every venue, one shape. Simulated venues are labeled by mode.
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - hyperliquid
+              - polymarket
+              - kalshi
+              - limitless
+          in: query
+          name: venue
+          required: false
+        - schema:
+            type: string
+          in: query
+          name: category
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UnifiedMarket"
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        venue:
+                          type: string
+                          enum:
+                            - hyperliquid
+                            - polymarket
+                            - kalshi
+                            - limitless
+                        error:
+                          type: string
+                      required:
+                        - venue
+                        - error
+                      additionalProperties: false
+                required:
+                  - markets
+                  - errors
+                additionalProperties: false
+  /api/venues/markets/{id}:
+    get:
+      tags:
+        - venues
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: id
+          required: true
+          description: "`venue:nativeId`"
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  market:
+                    $ref: "#/components/schemas/UnifiedMarket"
+                  books:
+                    type: object
+                    properties:
+                      "yes":
+                        type: object
+                        properties:
+                          bids:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                px:
+                                  type: number
+                                sz:
+                                  type: number
+                              required:
+                                - px
+                                - sz
+                              additionalProperties: false
+                          asks:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                px:
+                                  type: number
+                                sz:
+                                  type: number
+                              required:
+                                - px
+                                - sz
+                              additionalProperties: false
+                        required:
+                          - bids
+                          - asks
+                        additionalProperties: false
+                      "no":
+                        type: object
+                        properties:
+                          bids:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                px:
+                                  type: number
+                                sz:
+                                  type: number
+                              required:
+                                - px
+                                - sz
+                              additionalProperties: false
+                          asks:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                px:
+                                  type: number
+                                sz:
+                                  type: number
+                              required:
+                                - px
+                                - sz
+                              additionalProperties: false
+                        required:
+                          - bids
+                          - asks
+                        additionalProperties: false
+                    required:
+                      - "yes"
+                      - "no"
+                    additionalProperties: false
+                required:
+                  - market
+                  - books
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/venues/events:
+    get:
+      tags:
+        - venues
+      description: Markets grouped by real-world question; multi-venue events first.
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: multiVenue
+          required: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UnifiedEvent"
+                required:
+                  - events
+                additionalProperties: false
+  /api/venues/route:
+    post:
+      tags:
+        - venues
+      description: "Best-execution quote: split a stake across venues by all-in price (fees included)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventKey:
+                  type: string
+                side:
+                  type: string
+                  enum:
+                    - "yes"
+                    - "no"
+                stakeUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 1000000
+                maxPrice:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  exclusiveMaximum: true
+                  maximum: 1
+                venues:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - hyperliquid
+                      - polymarket
+                      - kalshi
+                      - limitless
+              required:
+                - eventKey
+                - side
+                - stakeUsd
+              additionalProperties: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenueRoute"
         "404":
           description: Error
           content:

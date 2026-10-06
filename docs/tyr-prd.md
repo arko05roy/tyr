@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-06, Phase 11)
+## Progress (updated 2026-10-06, Phase 11b)
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -20,6 +20,7 @@
 | 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green           |
 | 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green              |
 | 11 — API surface freeze  | ✅ Done                     | contract 7/7 live, 45 ops; all API suites (Flow A/C/D, deposits, receipts) green in strict mode  |
+| 11b — Multi-venue layer  | 🟡 In progress (simulated)  | `@tyr/venues` + `/api/venues/*` done, 6/6 offline tests; `placeBet` on any venue next            |
 | 12 — Frontend            | ⏭ Next                      |                                                                                                  |
 | 13                       | ⬜ Not started              |                                                                                                  |
 
@@ -29,6 +30,7 @@
 - **Robinhood hedge swap simulated** — real RH testnet Stock Tokens + balances; price from HL testnet `xyz` oracle (no official Chainlink feed / Uniswap pool on RH testnet). Hedge cash moves on the real Solana CT bankroll.
 - **Geofence is self-declared region only** (no MaxMind IP lookup), blocked = US, CA, GB, CH, AE.
 - **FROST authorizes Zcash payout instructions, not the spend itself** — zingolib can't consume external spend-auth signatures; 2-of-3 signers gate every payout the hot wallet sends.
+- **Polymarket, Kalshi, Limitless simulated** (2026-10-06) — the product routes across venues, but only Hyperliquid is integrated live. The other three are modeled adapters (deterministic books from event fair price + venue skew + time drift, venue fee schedules), and every fill carries `simulated: true` with no venue ref. This is an exception to ground rule 2; the reason is that Colosseum judges the idea and its potential, and the adapter interface makes each venue a drop-in replacement.
 - **Zcash on local regtest** (`infra/zcash-regtest`, zebrad 6.3.0 + zainod 0.10.1) — no reachable TAZ faucet. Shielded pool on this chain is Ironwood (Orchard's successor).
 
 ---
@@ -92,6 +94,7 @@ packages/
   solana/              Token-2022 confidential ops + Anchor client
   zcash/               lightwalletd client, memo codec, ZIP-321, FROST coordinator
   hyperliquid/         HL testnet trading adapter (signing, builder code)
+  venues/              venue-agnostic market model, adapters (HL live; Polymarket/Kalshi/Limitless simulated), event matching, router
   robinhood/           Uniswap swap adapter, Chainlink reader, geofence
   evm-deposits/        Base/Arb/Sepolia deposit watchers
 programs/
@@ -112,7 +115,7 @@ docs/
 - `ConfidentialAccount` (userId, solanaTokenAccount, elgamalPubkey, aeKeyRef)
 - `Deposit` (id, userId, sourceChain, sourceTx, amount, status, solanaTx)
 - `ZcashOrder` (id, txid, memoRaw, marketId, side, size, returnAddr, status)
-- `Order` (id, userId, hlMarket, side, size, price, hlOid, builderFee, status)
+- `Order` (id, userId, hlMarket, side, size, price, hlOid, builderFee, status) — Phase 11b: `hlMarket` becomes a venue market id (`venue:nativeId`)
 - `Settlement` (orderId, outcome, pnl, solanaTx, tempoPayoutTx, memoHash)
 - `Hedge` (orderId, stockToken, amountIn, amountOut, uniswapTx, chainlinkRound)
 - `AgentSession` (id, ownerId, agentPubkey, capUsd, spentUsd, tempoSessionId)
@@ -416,30 +419,52 @@ _Shipped as:_ ✅ `rh.price.test.ts` (live oracle + on-chain symbol/inventory, s
 
 Publish an OpenAPI spec (`services/api/openapi.yaml`, generated from zod via `fastify-type-provider-zod`) and a typed client (`packages/api-client`, generated with `openapi-typescript`).
 
-| Method  | Path                                             | Purpose                                     |
-| ------- | ------------------------------------------------ | ------------------------------------------- |
-| POST    | `/api/auth/passkey/register/options` · `/verify` | WebAuthn registration                       |
-| POST    | `/api/auth/passkey/login/options` · `/verify`    | WebAuthn login → session cookie             |
-| POST    | `/api/tempo/sponsor`                             | co-sign sponsored tx                        |
-| GET/PUT | `/api/limits`                                    | read/set loss limit                         |
-| GET     | `/api/balance`                                   | decrypted confidential balance (owner only) |
-| GET     | `/api/deposits/addresses`                        | per-chain deposit addresses                 |
-| GET     | `/api/deposits`                                  | deposit history                             |
-| GET     | `/api/markets` · `/api/markets/:id`              | HL outcome markets + book                   |
-| POST    | `/api/bets`                                      | place bet                                   |
-| GET     | `/api/bets` · `/api/bets/:id`                    | bet status                                  |
-| POST    | `/api/zcash/request`                             | ZIP-321 URI for a bet                       |
-| GET     | `/api/hedge/:marketId/quote` · POST `/api/hedge` | hedge (geofenced)                           |
-| GET     | `/api/receipts` · `/api/receipts/:id/proof`      | receipts                                    |
-| POST    | `/api/agent/sessions`                            | create capped agent session                 |
-| *       | `/api/agent/*`                                   | MPP-paid agent endpoints                    |
-| GET     | `/api/admin/revenue`                             | builder fee earned                          |
-| WS      | `/ws`                                            | live order/settlement/deposit events        |
+| Method  | Path                                                               | Purpose                                         |
+| ------- | ------------------------------------------------------------------ | ----------------------------------------------- |
+| POST    | `/api/auth/passkey/register/options` · `/verify`                   | WebAuthn registration                           |
+| POST    | `/api/auth/passkey/login/options` · `/verify`                      | WebAuthn login → session cookie                 |
+| POST    | `/api/tempo/sponsor`                                               | co-sign sponsored tx                            |
+| GET/PUT | `/api/limits`                                                      | read/set loss limit                             |
+| GET     | `/api/balance`                                                     | decrypted confidential balance (owner only)     |
+| GET     | `/api/deposits/addresses`                                          | per-chain deposit addresses                     |
+| GET     | `/api/deposits`                                                    | deposit history                                 |
+| GET     | `/api/markets` · `/api/markets/:id`                                | HL outcome markets + book                       |
+| GET     | `/api/venues` · `/api/venues/markets[/:id]` · `/api/venues/events` | all venues, unified markets, cross-venue events |
+| POST    | `/api/venues/route`                                                | best-execution quote across venues              |
+| POST    | `/api/bets`                                                        | place bet                                       |
+| GET     | `/api/bets` · `/api/bets/:id`                                      | bet status                                      |
+| POST    | `/api/zcash/request`                                               | ZIP-321 URI for a bet                           |
+| GET     | `/api/hedge/:marketId/quote` · POST `/api/hedge`                   | hedge (geofenced)                               |
+| GET     | `/api/receipts` · `/api/receipts/:id/proof`                        | receipts                                        |
+| POST    | `/api/agent/sessions`                                              | create capped agent session                     |
+| *       | `/api/agent/*`                                                     | MPP-paid agent endpoints                        |
+| GET     | `/api/admin/revenue`                                               | builder fee earned                              |
+| WS      | `/ws`                                                              | live order/settlement/deposit events            |
 
 **Tests:** `api.contract.test.ts` — every route against the running server, schema validated; full e2e re-run of Flows A–D through HTTP only.
 _Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protected op returns 401 to anonymous callers; every agent op returns 403 to an unconfirmed key; all 45 ops are exercised through `@tyr/api-client` with no 5xx under strict mode; a real public `bet` receipt (proof + verify) and a Flow B receipt/disclosure; every persisted Order/Deposit/Hedge row matches its schema. ✅ Strict-mode re-runs green: `e2e.flowA`, `e2e.flowD`, `agent.mpp`, `agent.bet`, `api.tempo`, `api.hl`, `receipts`. ✅ `api.deposits` re-run green in strict mode, after seeding the test sender with 0.002 RH ETH from the hot wallet. Flow B's HTTP surface is covered by the contract test; its pipeline e2e lives in `packages/zcash`.
 
 ✅ **Backend done gate:** all phase suites green on live testnets in one CI run; `docs/evidence.md` updated.
+
+---
+
+## Phase 11b — Multi-venue layer — 🟡 IN PROGRESS (simulated venues)
+
+> Decision (2026-10-06): a single-venue front end is too narrow a pitch. tyr becomes a terminal over **every major prediction venue**, with Hyperliquid as the live venue and Polymarket, Kalshi (tokenized on Solana) and Limitless (Base) as simulated adapters behind the same interface.
+
+**Package:** `packages/venues`
+
+✅ 11b.1 **Unified market model** (`types.ts`): `Market { id: 'venue:nativeId', venue, title, category, eventKey, resolvesAt, yes {bid, ask, mid}, liquidityUsd }`, `SideBook`, `Fill`, and a `Venue` interface (`markets`, `market`, `book`, `takerFee`, `execute`). `VenueInfo` states settlement chain, collateral, `mode: live | simulated`, revenue model, minimum order.
+✅ 11b.2 **Hyperliquid adapter** (live data): wraps `featuredMarkets` / `bookFor`; price templates (`perp`, `threshold`, `time`) map to `eventKey = price:<asset>:<threshold>:<time>`; fee = builder code.
+✅ 11b.3 **Simulated venues** (`adapters/simulated.ts`, `catalog.ts`): deterministic books (fair price + venue skew + 30 s drift, 5 levels); NO book mirrors YES. Catalog of 11 real-world questions (Fed, CPI, recession, S&P, Nvidia earnings, BTC ATH, SOL ETF, UK election, NBA, GTA VI) listed on 1–3 venues each; Polymarket and Limitless also mirror HL price markets so live HL prices compare against them. Modeled fees: Polymarket 0, Kalshi `ceil(0.07·C·P·(1−P))`, Limitless 1%.
+✅ 11b.4 **Cross-venue events** (`events.ts`): group by `eventKey`; best YES/NO ask per event and the price gap between venues.
+✅ 11b.5 **Router** (`router.ts`): merges every venue's asks ranked by price + taker fee, fills the stake greedily, drops legs under a venue minimum, and compares against each single venue (`singles`, `edgeVsWorst`). `executeRoute` sends each leg to its venue.
+✅ 11b.6 **Solana market id** (`solana.ts`): HL keeps its outcome id; other venues hash into u64 with the top bit set, so they never collide with HL ids in `tyr_settlement`.
+✅ 11b.7 **API:** `GET /api/venues`, `GET /api/venues/markets` (`?venue=&category=`), `GET /api/venues/markets/:id`, `GET /api/venues/events` (`?multiVenue=`), `POST /api/venues/route` (quote only). OpenAPI + `api-client` regenerated; contract test exercises all five.
+⬜ 11b.8 **Pipeline cutover:** `placeBet` takes a venue market id (or an `eventKey` and routes); step `opened → executed` calls `executeRoute`; `Order.hlMarket` → `marketId` migration; settlement resolves through the venue adapter. Flow B memo and agent routes accept venue ids.
+⬜ 11b.9 **Live adapters (post-hackathon):** Polymarket CLOB API (builder attribution), Kalshi tokenized outcomes on Solana, Limitless on Base. Each replaces its simulated adapter; nothing else changes.
+
+**Tests:** ✅ `venues.test.ts` (offline, fixed clock): one market shape across venues, NO mirrors YES, cross-venue grouping, router ≥ best single venue and all simulated fills filled, Kalshi fee formula, Solana id ranges. ✅ Live smoke: 9 HL + 24 simulated markets; HL "AAPL above 7750" matched Polymarket and Limitless; $100 YES routed 108 contracts vs 35 on HL alone. ⬜ `api.contract.test.ts` re-run with the new routes (needs DB + live testnets).
 
 ---
 
@@ -452,7 +477,7 @@ Screens (mobile-first):
 1. `/` landing + "Continue with fingerprint".
 2. `/onboarding/limit` — set daily/weekly loss limit.
 3. `/fund` — chain picker, deposit addresses + QR, live deposit status (WS).
-4. `/markets` & `/markets/[id]` — book, odds, one-tap bet, optional hedge card (only if API says eligible).
+4. `/markets` & `/markets/[id]` — questions across all venues (`/api/venues/events`), every venue's price side by side with a "simulated" badge where it applies, router quote before the one-tap bet, optional hedge card (only if API says eligible).
 5. `/zcash` — ZIP-321 QR for a bet, "waiting for shielded payment" status.
 6. `/portfolio` — hidden-balance view (decrypt on demand), open bets, settlements.
 7. `/receipts/[id]` — prove/keep-private toggle, verification links to explorers.
@@ -503,6 +528,7 @@ Rules: no chain RPC calls from the browser except passkey/Phantom signing; all d
 - Custodial key model for confidential accounts (server-derived vs passkey PRF).
 - FROST fallback if Orchard FROST spending isn't usable.
 - Cutting a chain if its role can't be demoed clearly (idea §6 scope risk).
+- Simulated venues (Polymarket, Kalshi, Limitless) — approved 2026-10-06; must be labeled simulated in the UI and demo.
 
 ## Appendix C — Day plan
 

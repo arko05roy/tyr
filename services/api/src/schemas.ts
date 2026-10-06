@@ -449,6 +449,71 @@ export const WsEvent = z
   ])
   .describe('Messages pushed on GET /ws (session cookie). Closes 4401 when unauthenticated.');
 
+// ---------- venues (multi-venue) ----------
+
+const VenueIdS = z.enum(['hyperliquid', 'polymarket', 'kalshi', 'limitless']);
+export const VenueInfo = z.object({
+  id: VenueIdS,
+  name: z.string(),
+  settlementChain: z.enum(['hypercore', 'polygon', 'solana', 'base']),
+  collateral: z.string(),
+  mode: z.enum(['live', 'simulated']),
+  revenue: z.string(),
+  minOrderUsd: z.number(),
+});
+export const UnifiedMarket = z.object({
+  id: z.string().describe('venue:nativeId'),
+  venue: VenueIdS,
+  nativeId: z.string(),
+  title: z.string(),
+  category: z.enum(['crypto', 'macro', 'finance', 'politics', 'sports', 'culture', 'other']),
+  eventKey: z.string(),
+  resolvesAt: IsoDate,
+  yes: z.object({ bid: z.number(), ask: z.number(), mid: z.number() }),
+  liquidityUsd: z.number(),
+});
+export const UnifiedEvent = z.object({
+  eventKey: z.string(),
+  title: z.string(),
+  category: UnifiedMarket.shape.category,
+  resolvesAt: IsoDate,
+  venues: z.array(
+    z.object({
+      venue: VenueIdS,
+      marketId: z.string(),
+      yesBid: z.number(),
+      yesAsk: z.number(),
+      liquidityUsd: z.number(),
+    }),
+  ),
+  bestYesAsk: z.object({ venue: VenueIdS, px: z.number() }),
+  bestNoAsk: z.object({ venue: VenueIdS, px: z.number() }),
+  priceGap: z.number(),
+});
+export const VenueRoute = z.object({
+  eventKey: z.string(),
+  side: z.enum(['yes', 'no']),
+  stakeUsd: z.number(),
+  legs: z.array(
+    z.object({
+      venue: VenueIdS,
+      marketId: z.string(),
+      sz: z.number(),
+      avgPx: z.number(),
+      limitPx: z.number(),
+      costUsd: z.number(),
+      feeUsd: z.number(),
+    }),
+  ),
+  contracts: z.number(),
+  costUsd: z.number(),
+  avgAllInPx: z.number(),
+  singles: z.array(
+    z.object({ venue: VenueIdS, marketId: z.string(), contracts: z.number(), costUsd: z.number() }),
+  ),
+  edgeVsWorst: z.number(),
+});
+
 /** Named schemas published under components.schemas. */
 export const components = {
   Error: Err,
@@ -457,6 +522,9 @@ export const components = {
   Deposit,
   Market,
   MarketDetail,
+  UnifiedMarket,
+  UnifiedEvent,
+  VenueRoute,
   Hedge,
   ReceiptSummary,
   Verification,

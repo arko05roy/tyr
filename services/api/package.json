@@ -22,6 +22,7 @@
     "@tyr/robinhood": "workspace:*",
     "@tyr/solana": "workspace:*",
     "@tyr/tempo": "workspace:*",
+    "@tyr/venues": "workspace:*",
     "@tyr/zcash": "workspace:*",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.0",
