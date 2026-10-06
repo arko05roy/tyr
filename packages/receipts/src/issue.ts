@@ -43,7 +43,8 @@ export async function betPayload(db: PrismaClient, o: SettledOrder) {
     v: 1,
     kind: 'bet',
     orderId: o.id,
-    market: Number(o.hlMarket),
+    // HL bets keep the numeric outcome id so pre-11b receipt hashes still recompute
+    market: o.hlMarket !== null ? Number(o.hlMarket) : o.marketId,
     side: o.side,
     stakeUsd: Number(o.stakeUsd ?? 0),
     outcome: s.outcome,

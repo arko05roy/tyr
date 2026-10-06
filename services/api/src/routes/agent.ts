@@ -488,7 +488,7 @@ export const agentRoutes =
               amountUsd: input.stakeUsd,
               kind: 'bet',
               resource: `bet:${input.idempotencyKey}`,
-              description: `tyr stake ${input.stakeUsd} USD on #${input.outcome} ${input.side}`,
+              description: `tyr stake ${input.stakeUsd} USD on ${input.marketId ?? `#${input.outcome}`} ${input.side}`,
             });
             if (!paid) return;
             stakeTx = paid.hash;

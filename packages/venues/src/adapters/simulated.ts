@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import {
   marketId,
   walk,
+  walkBids,
   type Category,
   type Fill,
   type Market,
@@ -124,7 +125,9 @@ export class SimulatedVenue implements Venue {
   async execute(req: OrderRequest): Promise<Fill> {
     const nativeId = req.marketId.slice(req.marketId.indexOf(':') + 1);
     const base = { venue: this.info.id, marketId: req.marketId, simulated: true } as const;
-    if (req.sz * req.limitPx < this.info.minOrderUsd)
+    const buy = req.isBuy ?? true;
+    // Closing sells may be below the venue minimum (unwinding a position is always allowed).
+    if (buy && req.sz * req.limitPx < this.info.minOrderUsd)
       return {
         ...base,
         status: 'rejected',
@@ -134,7 +137,8 @@ export class SimulatedVenue implements Venue {
         feeUsd: 0,
         error: `minimum order is $${this.info.minOrderUsd}`,
       };
-    const w = walk((await this.book(nativeId, req.side)).asks, req.sz, req.limitPx);
+    const book = await this.book(nativeId, req.side);
+    const w = buy ? walk(book.asks, req.sz, req.limitPx) : walkBids(book.bids, req.sz, req.limitPx);
     return {
       ...base,
       status: w.filled <= 0 ? 'canceled' : w.filled + 1e-9 >= req.sz ? 'filled' : 'partial',

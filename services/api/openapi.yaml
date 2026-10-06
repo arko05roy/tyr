@@ -56,9 +56,17 @@ components:
         idempotencyKey:
           type: string
           nullable: true
+        marketId:
+          type: string
+          description: venue market id `venue:nativeId`
         hlMarket:
           type: string
-          description: outcome id
+          nullable: true
+          description: HL outcome id (Hyperliquid orders only)
+        routeKey:
+          type: string
+          nullable: true
+          description: shared by the legs of one routed bet
         side:
           type: string
           enum:
@@ -91,13 +99,13 @@ components:
         builderFee:
           type: string
           nullable: true
-          description: decimal number as a string (exact, from Postgres numeric)
+          description: HL builder fee, or the venue taker fee on other venues
         hlOid:
           type: string
           nullable: true
         simulated:
           type: boolean
-          description: paper fill against the live HL testnet book
+          description: paper fill (HL testnet book) or a simulated venue adapter — no venue ref exists
         execution:
           nullable: true
         status:
@@ -135,7 +143,9 @@ components:
         - userId
         - agentSessionId
         - idempotencyKey
+        - marketId
         - hlMarket
+        - routeKey
         - side
         - isBuy
         - tif
@@ -1992,7 +2002,7 @@ paths:
     post:
       tags:
         - bets
-      description: Place a bet (Flow A). 402 = loss limit exceeded on-chain, 409 = insufficient confidential balance. Replaying an idempotencyKey returns the same order.
+      description: "Place a bet (Flow A) on one venue market. 402 = loss limit exceeded on-chain, 409 = insufficient confidential balance. Replaying an idempotencyKey returns the same order. Fills on simulated venues carry simulated: true."
       requestBody:
         required: true
         content:
@@ -2000,9 +2010,14 @@ paths:
             schema:
               type: object
               properties:
+                marketId:
+                  type: string
+                  pattern: ^(hyperliquid|polymarket|kalshi|limitless):.+$
+                  description: venue market id `venue:nativeId` (see /api/venues/markets)
                 outcome:
                   type: integer
                   minimum: 0
+                  description: "legacy: hyperliquid:<outcome>"
                 side:
                   type: string
                   enum:
@@ -2024,7 +2039,6 @@ paths:
                   exclusiveMaximum: true
                   maximum: 1
               required:
-                - outcome
                 - side
                 - stakeUsd
                 - idempotencyKey
@@ -2083,6 +2097,92 @@ paths:
                   - bets
                 additionalProperties: false
         "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/bets/routed:
+    post:
+      tags:
+        - bets
+      description: Route a stake across every venue listing the event (best all-in price first); each leg is a full Flow A bet keyed `${idempotencyKey}:${venue}` and shares routeKey. Status codes as POST /api/bets; legs placed before a rejection stay placed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventKey:
+                  type: string
+                  minLength: 1
+                  description: cross-venue event (see /api/venues/events)
+                side:
+                  type: string
+                  enum:
+                    - "yes"
+                    - "no"
+                stakeUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 1000
+                idempotencyKey:
+                  type: string
+                  minLength: 8
+                  maxLength: 110
+                maxPrice:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  exclusiveMaximum: true
+                  maximum: 1
+              required:
+                - eventKey
+                - side
+                - stakeUsd
+                - idempotencyKey
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  route:
+                    $ref: "#/components/schemas/VenueRoute"
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+                required:
+                  - route
+                  - orders
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
           description: Error
           content:
             application/json:
@@ -2726,9 +2826,14 @@ paths:
             schema:
               type: object
               properties:
+                marketId:
+                  type: string
+                  pattern: ^(hyperliquid|polymarket|kalshi|limitless):.+$
+                  description: venue market id `venue:nativeId` (see /api/venues/markets)
                 outcome:
                   type: integer
                   minimum: 0
+                  description: "legacy: hyperliquid:<outcome>"
                 side:
                   type: string
                   enum:
@@ -2750,7 +2855,6 @@ paths:
                   exclusiveMaximum: true
                   maximum: 1
               required:
-                - outcome
                 - side
                 - stakeUsd
                 - idempotencyKey

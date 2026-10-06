@@ -16,6 +16,7 @@
     "@tyr/hyperliquid": "workspace:*",
     "@tyr/solana": "workspace:*",
     "@tyr/tempo": "workspace:*",
+    "@tyr/venues": "workspace:*",
     "viem": "^2.57.3"
   }
 }

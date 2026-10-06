@@ -61,4 +61,27 @@ describe('venues (simulated)', () => {
     expect(solanaMarketId('hyperliquid:42')).toBe(42n);
     expect(solanaMarketId('kalshi:KXfed-oct-cut25') >= 1n << 63n).toBe(true);
   });
+
+  it('closes a position by selling into the bids (below the venue minimum too)', async () => {
+    const v = reg.venue('polymarket');
+    const book = await v.book('fed-oct-cut25', 'no');
+    const best = book.bids[0]?.px ?? 0;
+    const f = await v.execute({
+      marketId: 'polymarket:fed-oct-cut25',
+      side: 'no',
+      sz: 3,
+      limitPx: best * 0.9,
+      isBuy: false,
+    });
+    expect(f.status).toBe('filled');
+    expect(f.avgPx).toBeCloseTo(best, 6);
+    const none = await v.execute({
+      marketId: 'polymarket:fed-oct-cut25',
+      side: 'no',
+      sz: 3,
+      limitPx: best + 0.01,
+      isBuy: false,
+    });
+    expect(none.status).toBe('canceled');
+  });
 });

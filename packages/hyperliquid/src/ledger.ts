@@ -19,6 +19,7 @@ const resultFields = (r: ExecResult) => ({
 
 const requestFields = (req: OrderRequest) => ({
   hlMarket: String(req.outcome),
+  marketId: `hyperliquid:${req.outcome}`,
   side: SIDE[req.side],
   isBuy: req.isBuy,
   tif: req.tif,
@@ -69,7 +70,9 @@ export async function cancelOrder(db: PrismaClient, exec: Executor, orderId: str
 
 /** Net filled size per (outcome, side) for a user — their share of the pooled float. */
 export async function positions(db: PrismaClient, userId: string) {
-  const orders = await db.order.findMany({ where: { userId, filledSize: { gt: 0 } } });
+  const orders = await db.order.findMany({
+    where: { userId, filledSize: { gt: 0 }, hlMarket: { not: null } },
+  });
   const pos = new Map<string, { outcome: number; side: OutcomeSide; size: number; cost: number }>();
   for (const o of orders) {
     const key = `${o.hlMarket}:${o.side}`;

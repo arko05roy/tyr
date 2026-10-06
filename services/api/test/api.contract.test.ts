@@ -220,6 +220,15 @@ describe('API contract (PRD 11)', () => {
     });
     expect(bet.error?.error).toMatch(/minimum order is \$10/); // rejected before any chain write
     expect((await api.GET('/api/balance')).data).toEqual({ availableUsd: 0, token: 'tyrUSD' });
+    const routed = await api.POST('/api/bets/routed', {
+      body: {
+        eventKey: ev.eventKey,
+        side: 'yes',
+        stakeUsd: 500,
+        idempotencyKey: `route-${Date.now()}`,
+      },
+    });
+    expect(routed.error?.code).toBe('balance'); // routed, then rejected before any chain write
 
     // deposits
     const addrs = await api.GET('/api/deposits/addresses');

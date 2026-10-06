@@ -44,8 +44,10 @@ export type OrderRequest = {
   side: Side;
   /** contracts */
   sz: number;
-  /** worst acceptable price per contract */
+  /** worst acceptable price per contract (highest when buying, lowest when selling) */
   limitPx: number;
+  /** false = sell held contracts into the bids (close at mark); default buy */
+  isBuy?: boolean;
 };
 
 export type Fill = {
@@ -84,6 +86,20 @@ export function walk(asks: Level[], sz: number, limitPx: number) {
   let notional = 0;
   for (const l of asks) {
     if (left <= 1e-12 || l.px > limitPx) break;
+    const take = Math.min(left, l.sz);
+    notional += take * l.px;
+    left -= take;
+  }
+  const filled = sz - left;
+  return { filled, notional, avgPx: filled ? notional / filled : 0 };
+}
+
+/** Walk bids down to limitPx for `sz` contracts (selling YES or NO). */
+export function walkBids(bids: Level[], sz: number, limitPx: number) {
+  let left = sz;
+  let notional = 0;
+  for (const l of bids) {
+    if (left <= 1e-12 || l.px < limitPx) break;
     const take = Math.min(left, l.sz);
     notional += take * l.px;
     left -= take;

@@ -126,12 +126,30 @@ export const MarketParams = z.object({ id: z.coerce.number().int().nonnegative()
 
 // ---------- bets ----------
 
-export const BetInput = z.object({
-  outcome: z.number().int().nonnegative(),
+const MarketIdStr = z
+  .string()
+  .regex(/^(hyperliquid|polymarket|kalshi|limitless):.+$/)
+  .describe('venue market id `venue:nativeId` (see /api/venues/markets)');
+const BetCommon = {
   side: SideEnum,
   stakeUsd: z.number().positive().max(1_000),
   idempotencyKey: z.string().min(8).max(128),
   maxPrice: z.number().gt(0).lt(1).optional(),
+};
+export const BetInput = z
+  .object({
+    marketId: MarketIdStr.optional(),
+    outcome: z.number().int().nonnegative().optional().describe('legacy: hyperliquid:<outcome>'),
+    ...BetCommon,
+  })
+  .refine((b) => (b.marketId === undefined) !== (b.outcome === undefined), {
+    message: 'give exactly one of marketId or outcome',
+  });
+export const RoutedBetInput = z.object({
+  eventKey: z.string().min(1).describe('cross-venue event (see /api/venues/events)'),
+  ...BetCommon,
+  // each leg's key is `${idempotencyKey}:${venue}`, which must fit the 128-char order key
+  idempotencyKey: z.string().min(8).max(110),
 });
 
 export const Settlement = z.object({
@@ -154,7 +172,9 @@ export const Order = z.object({
   userId: z.string(),
   agentSessionId: z.string().nullable(),
   idempotencyKey: z.string().nullable(),
-  hlMarket: z.string().describe('outcome id'),
+  marketId: z.string().describe('venue market id `venue:nativeId`'),
+  hlMarket: z.string().nullable().describe('HL outcome id (Hyperliquid orders only)'),
+  routeKey: z.string().nullable().describe('shared by the legs of one routed bet'),
   side: SideEnum,
   isBuy: z.boolean(),
   tif: z.string(),
@@ -164,9 +184,11 @@ export const Order = z.object({
   avgPx: Dec.nullable(),
   stakeUsd: Dec.nullable(),
   stakeSalt: z.string().nullable(),
-  builderFee: Dec.nullable(),
+  builderFee: Dec.nullable().describe('HL builder fee, or the venue taker fee on other venues'),
   hlOid: z.string().nullable(),
-  simulated: z.boolean().describe('paper fill against the live HL testnet book'),
+  simulated: z
+    .boolean()
+    .describe('paper fill (HL testnet book) or a simulated venue adapter — no venue ref exists'),
   execution: Unknown.nullable(),
   status: z.string(),
   step: z.string().describe('last completed saga step'),

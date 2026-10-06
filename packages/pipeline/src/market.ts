@@ -9,9 +9,8 @@ import {
   treasury,
 } from '@tyr/solana';
 
-/** HL outcome id doubles as the on-chain market id; admin registers it on first use. */
-export async function ensureMarketRegistered(outcome: number) {
-  const id = BigInt(outcome);
+/** On-chain market id = solanaMarketId(venue market id); admin registers it on first use. */
+export async function ensureMarketRegistered(id: bigint) {
   if (await fetchMarket(id)) return null;
   const admin = await signerFromFile(
     process.env.SOLANA_DEPLOYER_KEYPAIR ?? 'keys/solana-deployer.json',

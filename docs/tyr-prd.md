@@ -4,25 +4,25 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-06, Phase 11b)
+## Progress (updated 2026-10-07, Phase 11b.8)
 
-| Phase                    | Status                      | Notes                                                                                            |
-| ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
-| 0 — Repo, config, guards | ✅ Done                     | Guard test green on live RPCs; Sepolia/Base/Arb RPCs now required                                |
-| 1 — Spikes               | ✅ Done (3 with deviations) | S1 ✅ live · S2 ⚠️ local regtest · S3 ✅ live · S4 ⚠️ execution simulated · S5 ⚠️ swap simulated |
-| 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                         |
-| 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest           |
-| 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                   |
-| 5 — Flow A orchestration | ✅ Done                     | e2e Flow A + live refund path green (24/24); BullMQ settlement; HL $10 min mirrored              |
-| 6 — Funding router       | ✅ Done                     | Solana USDC, Tempo, RH ETH, API, worker green live; EVM USDC live tests waived (opt-in)          |
-| 7 — Zcash                | ✅ Done (regtest, fallback) | 17/17 (memo TS+Rust, FROST 2-of-3 live containers, Flow B e2e + refund); Stop 7 resolved         |
-| 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green |
-| 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green           |
-| 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green              |
-| 11 — API surface freeze  | ✅ Done                     | contract 7/7 live, 45 ops; all API suites (Flow A/C/D, deposits, receipts) green in strict mode  |
-| 11b — Multi-venue layer  | 🟡 In progress (simulated)  | `@tyr/venues` + `/api/venues/*` done, 6/6 offline tests; `placeBet` on any venue next            |
-| 12 — Frontend            | ⏭ Next                      |                                                                                                  |
-| 13                       | ⬜ Not started              |                                                                                                  |
+| Phase                    | Status                      | Notes                                                                                             |
+| ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| 0 — Repo, config, guards | ✅ Done                     | Guard test green on live RPCs; Sepolia/Base/Arb RPCs now required                                 |
+| 1 — Spikes               | ✅ Done (3 with deviations) | S1 ✅ live · S2 ⚠️ local regtest · S3 ✅ live · S4 ⚠️ execution simulated · S5 ⚠️ swap simulated  |
+| 2 — Tempo backend        | ✅ Done                     | 9/9 live tests green (guard + tempo + API); hashes in `docs/evidence.md`                          |
+| 3 — Solana               | ✅ Done                     | 5/5 live devnet tests (ct, auditor, program); Stop 3 resolved; anchor test runs Vitest            |
+| 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                    |
+| 5 — Flow A orchestration | ✅ Done                     | e2e Flow A + live refund path green (24/24); BullMQ settlement; HL $10 min mirrored               |
+| 6 — Funding router       | ✅ Done                     | Solana USDC, Tempo, RH ETH, API, worker green live; EVM USDC live tests waived (opt-in)           |
+| 7 — Zcash                | ✅ Done (regtest, fallback) | 17/17 (memo TS+Rust, FROST 2-of-3 live containers, Flow B e2e + refund); Stop 7 resolved          |
+| 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green  |
+| 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green            |
+| 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green               |
+| 11 — API surface freeze  | ✅ Done                     | contract 7/7 live, 45 ops; all API suites (Flow A/C/D, deposits, receipts) green in strict mode   |
+| 11b — Multi-venue layer  | ✅ Done (simulated venues)  | bets on any venue + routed bets through the full saga; e2e.venues live; Flow A/C/D regressions ✅ |
+| 12 — Frontend            | ⏭ Next                      |                                                                                                   |
+| 13                       | ⬜ Not started              |                                                                                                   |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -431,7 +431,7 @@ Publish an OpenAPI spec (`services/api/openapi.yaml`, generated from zod via `fa
 | GET     | `/api/markets` · `/api/markets/:id`                                | HL outcome markets + book                       |
 | GET     | `/api/venues` · `/api/venues/markets[/:id]` · `/api/venues/events` | all venues, unified markets, cross-venue events |
 | POST    | `/api/venues/route`                                                | best-execution quote across venues              |
-| POST    | `/api/bets`                                                        | place bet                                       |
+| POST    | `/api/bets` · `/api/bets/routed`                                   | place bet (venue market) · routed across venues |
 | GET     | `/api/bets` · `/api/bets/:id`                                      | bet status                                      |
 | POST    | `/api/zcash/request`                                               | ZIP-321 URI for a bet                           |
 | GET     | `/api/hedge/:marketId/quote` · POST `/api/hedge`                   | hedge (geofenced)                               |
@@ -448,7 +448,7 @@ _Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protecte
 
 ---
 
-## Phase 11b — Multi-venue layer — 🟡 IN PROGRESS (simulated venues)
+## Phase 11b — Multi-venue layer — ✅ DONE (simulated venues; Flow B memo stays HL-only)
 
 > Decision (2026-10-06): a single-venue front end is too narrow a pitch. tyr becomes a terminal over **every major prediction venue**, with Hyperliquid as the live venue and Polymarket, Kalshi (tokenized on Solana) and Limitless (Base) as simulated adapters behind the same interface.
 
@@ -461,10 +461,12 @@ _Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protecte
 ✅ 11b.5 **Router** (`router.ts`): merges every venue's asks ranked by price + taker fee, fills the stake greedily, drops legs under a venue minimum, and compares against each single venue (`singles`, `edgeVsWorst`). `executeRoute` sends each leg to its venue.
 ✅ 11b.6 **Solana market id** (`solana.ts`): HL keeps its outcome id; other venues hash into u64 with the top bit set, so they never collide with HL ids in `tyr_settlement`.
 ✅ 11b.7 **API:** `GET /api/venues`, `GET /api/venues/markets` (`?venue=&category=`), `GET /api/venues/markets/:id`, `GET /api/venues/events` (`?multiVenue=`), `POST /api/venues/route` (quote only). OpenAPI + `api-client` regenerated; contract test exercises all five.
-⬜ 11b.8 **Pipeline cutover:** `placeBet` takes a venue market id (or an `eventKey` and routes); step `opened → executed` calls `executeRoute`; `Order.hlMarket` → `marketId` migration; settlement resolves through the venue adapter. Flow B memo and agent routes accept venue ids.
-⬜ 11b.9 **Live adapters (post-hackathon):** Polymarket CLOB API (builder attribution), Kalshi tokenized outcomes on Solana, Limitless on Base. Each replaces its simulated adapter; nothing else changes.
+✅ 11b.8 **Pipeline cutover:** `placeBet` takes a venue market id (or an `eventKey` and routes); step `opened → executed` calls `executeRoute`; `Order.hlMarket` → `marketId` migration; settlement resolves through the venue adapter. Flow B memo and agent routes accept venue ids.
 
-**Tests:** ✅ `venues.test.ts` (offline, fixed clock): one market shape across venues, NO mirrors YES, cross-venue grouping, router ≥ best single venue and all simulated fills filled, Kalshi fee formula, Solana id ranges. ✅ Live smoke: 9 HL + 24 simulated markets; HL "AAPL above 7750" matched Polymarket and Limitless; $100 YES routed 108 contracts vs 35 on HL alone. ⬜ `api.contract.test.ts` re-run with the new routes (needs DB + live testnets).
+> As built: `Order.marketId` (`venue:nativeId`, backfilled `hyperliquid:<outcome>`), `hlMarket` kept nullable for HL rows, `routeKey` links legs (migration `20261007120000_venues_phase11b`). `placeBet` accepts `marketId` (or legacy `outcome`); HL keeps the Phase 4 executor path, other venues quote/size against their adapter book and fee (`sizeForVenue`, binary search under non-linear fees like Kalshi's) and execute via `Venue.execute`; the venue fee is stored in `builderFee`. Position PDAs use `solanaMarketId`. `placeRoutedBet` / `POST /api/bets/routed` runs one full saga per router leg (`${key}:${venue}`, shared `routeKey`); a retry re-quotes and resumes placed legs; legs placed before a rejection stay placed. Settlement: venues got sell-side execution (`isBuy: false`, walks bids; closing sells skip the venue minimum); non-HL bets close at mark once the market passes `resolvesAt` (no resolution feed for simulated venues). Hedges stay HL-only (rules map HL markets). Receipts keep the numeric HL `market` so pre-11b hashes still verify. Agent `POST /api/agent/bets` accepts `marketId`. **Not done:** Flow B memo still encodes a u64 HL outcome (binary v1); venue ids in the Zcash memo need a v2 codec.
+> ⬜ 11b.9 **Live adapters (post-hackathon):** Polymarket CLOB API (builder attribution), Kalshi tokenized outcomes on Solana, Limitless on Base. Each replaces its simulated adapter; nothing else changes.
+
+**Tests:** ✅ `venues.test.ts` (offline, fixed clock): one market shape across venues, NO mirrors YES, cross-venue grouping, router ≥ best single venue and all simulated fills filled, Kalshi fee formula, Solana id ranges, close-at-mark sells. ✅ `pipeline/test/venue.test.ts` (offline): market id resolution, sizing within stake under Kalshi/Polymarket fees. ✅ `e2e.venues.test.ts` (live): Kalshi bet by marketId + routed bet → real Tempo stake, CT escrow, Position PDA, simulated fill, close at mark, settle_position, Tempo memo payout; replay idempotent. ✅ Live smoke: 9 HL + 24 simulated markets; HL "AAPL above 7750" matched Polymarket and Limitless; $100 YES routed 108 contracts vs 35 on HL alone. ✅ `api.contract.test.ts` re-run: 7/7, 51 ops (incl. `POST /api/bets/routed`); Flow A, receipts, agent.bet, Flow D regressions green.
 
 ---
 

@@ -14,10 +14,12 @@ import {
   treasury,
 } from '@tyr/solana';
 import { payout } from '@tyr/tempo';
+import { parseMarketId, solanaMarketId } from '@tyr/venues';
 import type { Address } from 'viem';
 import { confidentialAccount, ensureEscrowLiquidity } from './accounts.js';
 import { emit } from './events.js';
 import { OUTCOME, commit, fromUnits, units } from './market.js';
+import { hlOutcome, isHl, placeVenueOrder, venues } from './venue.js';
 
 export type Resolution = { kind: 'resolved'; winner: OutcomeSide } | { kind: 'close' };
 
@@ -54,7 +56,7 @@ async function finalize(db: PrismaClient, orderId: string, f: Final) {
         await settlePositionIx({
           relayer,
           user: keys.owner.address,
-          marketId: BigInt(order.hlMarket),
+          marketId: solanaMarketId(order.marketId),
           orderId: orderId32(orderId),
           outcome: OUTCOME[s.outcome as keyof typeof OUTCOME],
           payoutCommitment: commit(amount, s.payoutSalt ?? undefined).commitment,
@@ -128,7 +130,6 @@ export async function settleOrder(
   if (order.step !== 'executed') throw new Error(`order ${orderId} is at step ${order.step}`);
 
   const side: OutcomeSide = order.side === 'yes' ? 0 : 1;
-  const outcome = Number(order.hlMarket);
   const filled = Number(order.filledSize);
   const stake = units(Number(order.stakeUsd ?? 0));
   const entryCost = units(filled * Number(order.avgPx ?? 0) + Number(order.builderFee ?? 0));
@@ -146,27 +147,52 @@ export async function settleOrder(
     });
   }
 
-  // Close at mark: real IOC sells into the live bid book, in rounds against a fresh book.
+  // Close at mark: IOC sells into the bid book, in rounds against a fresh book. HL sells are real
+  // (or paper) executor orders; other venues sell through their adapter.
+  const hl = isHl(order.marketId);
+  const { venue, nativeId } = parseMarketId(order.marketId);
+  const bestBid = async () =>
+    hl
+      ? Number((await bookFor(hlOutcome(order.marketId), side)).levels[0][0]?.px ?? NaN)
+      : ((
+          await venues()
+            .venue(venue)
+            .book(nativeId, order.side as 'yes' | 'no')
+        ).bids[0]?.px ?? NaN);
   let last: string | undefined;
   for (let round = 0; round < CLOSE_ROUNDS; round++) {
     const remaining = filled - (await sold());
     if (remaining <= 1e-9) break;
-    const bid = (await bookFor(outcome, side)).levels[0][0];
-    if (!bid) break;
-    const close = await placeOrder(
-      db,
-      exec,
-      order.userId,
-      {
-        outcome,
-        side,
-        isBuy: false,
-        sz: remaining,
-        limitPx: Math.max(0.001, Number((Number(bid.px) * (1 - CLOSE_SLIPPAGE)).toFixed(4))),
-        tif: 'Ioc',
-      },
-      { parentId: orderId },
-    );
+    const bid = await bestBid();
+    if (Number.isNaN(bid)) break;
+    const limitPx = Math.max(0.001, Number((bid * (1 - CLOSE_SLIPPAGE)).toFixed(4)));
+    const close = hl
+      ? await placeOrder(
+          db,
+          exec,
+          order.userId,
+          {
+            outcome: hlOutcome(order.marketId),
+            side,
+            isBuy: false,
+            sz: remaining,
+            limitPx,
+            tif: 'Ioc',
+          },
+          { parentId: orderId },
+        )
+      : await placeVenueOrder(
+          db,
+          order.userId,
+          {
+            marketId: order.marketId,
+            side: order.side as 'yes' | 'no',
+            sz: remaining,
+            limitPx,
+            isBuy: false,
+          },
+          { parentId: orderId },
+        );
     last = close.id;
     if (close.status === 'rejected' || Number(close.filledSize) === 0) break;
   }

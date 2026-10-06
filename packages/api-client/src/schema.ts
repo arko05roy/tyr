@@ -1101,7 +1101,7 @@ export interface paths {
       };
     };
     put?: never;
-    /** @description Place a bet (Flow A). 402 = loss limit exceeded on-chain, 409 = insufficient confidential balance. Replaying an idempotencyKey returns the same order. */
+    /** @description Place a bet (Flow A) on one venue market. 402 = loss limit exceeded on-chain, 409 = insufficient confidential balance. Replaying an idempotencyKey returns the same order. Fills on simulated venues carry simulated: true. */
     post: {
       parameters: {
         query?: never;
@@ -1112,7 +1112,10 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            outcome: number;
+            /** @description venue market id `venue:nativeId` (see /api/venues/markets) */
+            marketId?: string;
+            /** @description legacy: hyperliquid:<outcome> */
+            outcome?: number;
             /** @enum {string} */
             side: 'yes' | 'no';
             stakeUsd: number;
@@ -1129,6 +1132,93 @@ export interface paths {
           };
           content: {
             'application/json': components['schemas']['Order'];
+          };
+        };
+        /** @description Error */
+        400: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+        /** @description Error */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+        /** @description Error */
+        402: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+        /** @description Error */
+        409: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['Error'];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bets/routed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** @description Route a stake across every venue listing the event (best all-in price first); each leg is a full Flow A bet keyed `${idempotencyKey}:${venue}` and shares routeKey. Status codes as POST /api/bets; legs placed before a rejection stay placed. */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** @description cross-venue event (see /api/venues/events) */
+            eventKey: string;
+            /** @enum {string} */
+            side: 'yes' | 'no';
+            stakeUsd: number;
+            idempotencyKey: string;
+            maxPrice?: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        201: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              route: components['schemas']['VenueRoute'];
+              orders: components['schemas']['Order'][];
+            };
           };
         };
         /** @description Error */
@@ -1840,7 +1930,10 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            outcome: number;
+            /** @description venue market id `venue:nativeId` (see /api/venues/markets) */
+            marketId?: string;
+            /** @description legacy: hyperliquid:<outcome> */
+            outcome?: number;
             /** @enum {string} */
             side: 'yes' | 'no';
             stakeUsd: number;
@@ -3245,8 +3338,12 @@ export interface components {
       userId: string;
       agentSessionId: string | null;
       idempotencyKey: string | null;
-      /** @description outcome id */
-      hlMarket: string;
+      /** @description venue market id `venue:nativeId` */
+      marketId: string;
+      /** @description HL outcome id (Hyperliquid orders only) */
+      hlMarket: string | null;
+      /** @description shared by the legs of one routed bet */
+      routeKey: string | null;
       /** @enum {string} */
       side: 'yes' | 'no';
       isBuy: boolean;
@@ -3262,10 +3359,10 @@ export interface components {
       /** @description decimal number as a string (exact, from Postgres numeric) */
       stakeUsd: string | null;
       stakeSalt: string | null;
-      /** @description decimal number as a string (exact, from Postgres numeric) */
+      /** @description HL builder fee, or the venue taker fee on other venues */
       builderFee: string | null;
       hlOid: string | null;
-      /** @description paper fill against the live HL testnet book */
+      /** @description paper fill (HL testnet book) or a simulated venue adapter — no venue ref exists */
       simulated: boolean;
       execution?: unknown;
       status: string;

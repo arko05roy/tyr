@@ -104,6 +104,8 @@ export async function quoteHedge(
   if (order.settlement || order.step !== 'executed' || Number(order.filledSize) <= 0)
     throw new HedgeRejectedError('only open, filled bets can be hedged', 'order');
 
+  if (order.hlMarket === null)
+    throw new HedgeRejectedError('hedges are only mapped for Hyperliquid markets', 'order');
   const rule = await ruleFor(Number(order.hlMarket));
   const direction = hedgeDirection(rule, order.side as 'yes' | 'no');
   const maxAmountInUsd = Number(order.stakeUsd ?? 0);
