@@ -1,0 +1,35 @@
+[package]
+name = "zcash-sidecar"
+version = "0.1.0"
+edition = "2024"
+description = "PRD 7.1/7.2/7.5/7.6 — tyr's Zcash wallet sidecar (zingolib) + FROST-authorized payouts"
+
+[lib]
+name = "tyr_zcash"
+path = "src/lib.rs"
+
+[[bin]]
+name = "zcash-sidecar"
+path = "src/main.rs"
+
+[dependencies]
+# zingolib built WITHOUT `nym`: the sidecar talks directly to the (local regtest) indexer.
+zingolib = { path = "../../.tools/src/zingolib/zingolib", features = ["perspective"] }
+zingo-status = { path = "../../.tools/src/zingolib/zingo-status" }
+zcash_address = "0.13.0"
+zcash_client_backend = { version = "0.24.0", features = ["orchard", "transparent-inputs"] }
+zcash_protocol = "0.10.6"
+zip32 = "0.2.0"
+frost-signer = { path = "../frost-signer" }
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+sha2 = "0.10"
+base64 = "0.22"
+http = "1"
+
+[patch.crates-io]
+lightwallet-protocol = { git = "https://github.com/zingolabs/lightwallet-protocol-rust", rev = "9bdfdc77eb283f2a3d26c27100cc2ac90148cd93" }

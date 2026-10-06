@@ -122,6 +122,23 @@ model ZcashOrder {
   returnAddr String
   status     String
   createdAt  DateTime @default(now())
+
+  // Phase 7 (Flow B). status: received → placed → settled → paid | refunding → refunded | rejected
+  // size = requested stake in USD (memo sizeCents / 100).
+  valueZat   BigInt   @default(0) // shielded value received
+  height     Int?
+  nonce      String? // memo nonce (hex)
+  zecUsd     Decimal? @db.Decimal(18, 6) // CoinGecko ZEC/USD used for entry, persisted (Stop 7)
+  rateSource String?
+  excessZat  BigInt   @default(0) // received above the stake, returned with the payout
+  orderId    String?  @unique
+  order      Order?   @relation(fields: [orderId], references: [id])
+  payoutZat  BigInt?
+  payoutTxid String?
+  frostSig   String? // 2-of-3 FROST group signature over the payout instruction
+  frostSigners String? // e.g. "1,2"
+  error      String?
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
 model Order {
@@ -161,6 +178,7 @@ model Order {
 
   settlement Settlement?
   hedge      Hedge?
+  zcashOrder ZcashOrder?
 
   @@index([userId])
 }

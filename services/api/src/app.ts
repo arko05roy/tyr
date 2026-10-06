@@ -11,6 +11,7 @@ import { limitRoutes } from './routes/limits.js';
 import { marketRoutes } from './routes/markets.js';
 import { sponsorRoutes } from './routes/sponsor.js';
 import { wsRoutes } from './routes/ws.js';
+import { zcashRoutes } from './routes/zcash.js';
 
 export type AppDeps = {
   db: PrismaClient;
@@ -33,6 +34,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(betRoutes(deps.executor ?? createExecutor()), { prefix: '/api/bets' });
   await app.register(balanceRoutes, { prefix: '/api/balance' });
   await app.register(depositRoutes, { prefix: '/api/deposits' });
+  await app.register(zcashRoutes, { prefix: '/api/zcash' });
   await app.register(wsRoutes);
   return app;
 }

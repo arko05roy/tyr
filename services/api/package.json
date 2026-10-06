@@ -18,6 +18,7 @@
     "@tyr/pipeline": "workspace:*",
     "@tyr/solana": "workspace:*",
     "@tyr/tempo": "workspace:*",
+    "@tyr/zcash": "workspace:*",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.0",
     "viem": "^2.57.3",

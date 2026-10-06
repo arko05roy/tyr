@@ -40,6 +40,13 @@ export type BetInput = {
   idempotencyKey: string;
   /** worst price per contract the user accepts (0–1); defaults to best ask + 2% */
   maxPrice?: number | undefined;
+  /**
+   * bankroll (Flow A): the user's confidential balance pays, Tempo enforces the limit.
+   * float (Flow B, Zcash): the user already paid in shielded ZEC to tyr, so tyr's float covers the
+   * HL order — no Tempo stake and no confidential user → escrow leg; the order starts at
+   * `escrowed` and still opens a real Solana position before executing.
+   */
+  funding?: 'bankroll' | 'float';
 };
 
 export class BetRejectedError extends Error {
@@ -80,10 +87,11 @@ export async function placeBet(db: PrismaClient, exec: Executor, input: BetInput
 
   const stake = units(input.stakeUsd);
   const keys = await confidentialAccount(db, input.userId);
+  const float = input.funding === 'float';
 
   if (!order) {
     const q = await quote(input);
-    if ((await availableBalance(keys)) < stake)
+    if (!float && (await availableBalance(keys)) < stake)
       throw new BetRejectedError('insufficient confidential balance', 'balance');
     const { salt } = commit(stake);
     order = await db.order.create({
@@ -97,6 +105,7 @@ export async function placeBet(db: PrismaClient, exec: Executor, input: BetInput
         stakeUsd: fromUnits(stake),
         stakeSalt: salt,
         status: 'pending',
+        ...(float ? { step: 'escrowed' } : {}),
       },
     });
   }

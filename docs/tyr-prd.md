@@ -15,13 +15,15 @@
 | 4 — Hyperliquid          | ✅ Done (paper execution)   | 6/6 live HL tests + 2 API; Stop 4 resolved (f=10, auto-featured, pooled float)                   |
 | 5 — Flow A orchestration | ✅ Done                     | e2e Flow A + live refund path green (24/24); BullMQ settlement; HL $10 min mirrored              |
 | 6 — Funding router       | ✅ Done                     | Solana USDC, Tempo, RH ETH, API, worker green live; EVM USDC live tests waived (opt-in)          |
-| 7 — Zcash                | ⏭ Next                      | 🛑 Stop 7: lightwalletd, ZEC/USD rate source, FROST hosting                                      |
-| 8–13                     | ⬜ Not started              |                                                                                                  |
+| 7 — Zcash                | ✅ Done (regtest, fallback) | 17/17 (memo TS+Rust, FROST 2-of-3 live containers, Flow B e2e + refund); Stop 7 resolved         |
+| 8 — Agent API            | ⏭ Next                      |                                                                                                  |
+| 9–13                     | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
 - **Hyperliquid execution simulated** — paper fills against the live HL testnet book (`simulated: true`, no fake oids/hashes). Testnet USDC needs an HL-mainnet-history address (drip and Circle CCTP both enforce it). Builder-fee proof deferred.
 - **Robinhood hedge swap simulated** — real RH testnet Stock Tokens + balances; price from HL testnet `xyz` mids (no official Chainlink feed / Uniswap pool on RH testnet).
+- **FROST authorizes Zcash payout instructions, not the spend itself** — zingolib can't consume external spend-auth signatures; 2-of-3 signers gate every payout the hot wallet sends.
 - **Zcash on local regtest** (`infra/zcash-regtest`, zebrad 6.3.0 + zainod 0.10.1) — no reachable TAZ faucet. Shielded pool on this chain is Ironwood (Orchard's successor).
 
 ---
@@ -310,19 +312,23 @@ _Choose one source of truth for user funds:_ **Solana confidential balance is th
 
 ---
 
-## Phase 7 — Zcash: memo-as-order + FROST relayer (Flow B)
+## Phase 7 — Zcash: memo-as-order + FROST relayer (Flow B) — ✅ DONE (regtest, FROST fallback)
+
+> Built as `services/zcash-sidecar` (Rust, zingolib without nym; roles `tyr` :7200 / test `user` :7201), `services/frost-signer` (3 containers via `infra/frost`, trusted-dealer `frost-keygen keys/frost`), `packages/zcash` (codec, ZIP-321, CoinGecko rate, Flow B ticks), API `POST /api/zcash/request`, `GET /api/zcash/orders/:txid[/disclosure]`, BullMQ tick `pnpm --filter @tyr/workers zcash`. Run sidecars with `infra/zcash-regtest/sidecars.sh`.
+> Flow B orders are owned by a system "zcash relayer" user and placed with `funding: 'float'` (no Tempo stake, no user CT debit; real open_position + HL order). Payout = payoutUsd at the **entry** rate + excess ZEC received; underpaid / rejected bets are refunded in full. Undecodable memos have no return address and are marked `rejected`.
+> Memo: binary v1 → `tyr1:` + base64url text memo (≤512 B). Stake = memo size; URI asks for stake + 2% rate buffer.
 
 **Package:** `packages/zcash` + Rust sidecar `services/zcash-sidecar`
 
-7.1 **Wallet sidecar (Rust):** `zcash_client_backend` + `zcash_client_sqlite` syncing from testnet lightwalletd; expose `GET /notes`, `POST /send`.
-7.2 **Memo codec:** compact binary format (≤512 bytes): `v1 | marketId | side | size | returnUA | nonce | checksum`. TS + Rust implementations with shared test vectors.
-7.3 **ZIP-321 request builder:** `zcash:<UA>?amount=..&memo=<base64url>`; QR rendered by frontend from API response.
-7.4 **Scanner worker:** on new note → decode memo → create `ZcashOrder` → convert ZEC value to USD at a quoted rate → run the Flow A pipeline from 5.1 (debiting tyr's float).
-7.5 **FROST 2-of-3:** ZF `frost-redpallas` trusted-dealer or DKG among 3 signer processes (3 separate containers with separate key shares) for the Orchard spend authorization of payouts. If the wallet stack cannot yet consume FROST signatures for Orchard spends, 🛑 stop and report — fallback requires human approval (e.g. FROST-signed authorization of a payout _instruction_ that a single hot wallet executes, disclosed as such).
-7.6 **Payout:** shielded TAZ to `returnUA` with memo = receipt id.
-7.7 **Viewing-key receipt:** export a payment disclosure / per-tx view for a single payout.
+✅ 7.1 **Wallet sidecar (Rust):** `zcash_client_backend` + `zcash_client_sqlite` syncing from testnet lightwalletd; expose `GET /notes`, `POST /send`.
+✅ 7.2 **Memo codec:** compact binary format (≤512 bytes): `v1 | marketId | side | size | returnUA | nonce | checksum`. TS + Rust implementations with shared test vectors.
+✅ 7.3 **ZIP-321 request builder:** `zcash:<UA>?amount=..&memo=<base64url>`; QR rendered by frontend from API response.
+✅ 7.4 **Scanner worker:** on new note → decode memo → create `ZcashOrder` → convert ZEC value to USD at a quoted rate → run the Flow A pipeline from 5.1 (debiting tyr's float).
+⚠️ 7.5 **FROST 2-of-3:** ZF `frost-redpallas` trusted-dealer or DKG among 3 signer processes (3 separate containers with separate key shares) for the Orchard spend authorization of payouts. If the wallet stack cannot yet consume FROST signatures for Orchard spends, 🛑 stop and report — fallback requires human approval (e.g. FROST-signed authorization of a payout _instruction_ that a single hot wallet executes, disclosed as such).
+✅ 7.6 **Payout:** shielded TAZ to `returnUA` with memo = receipt id.
+⚠️ 7.7 **Viewing-key receipt:** export a payment disclosure / per-tx view for a single payout.
 
-🛑 **HUMAN STOP 7**
+🛑 **HUMAN STOP 7** ✅ resolved (CoinGecko rate, 3 containers same box, fallback approved — see `docs/human-values.md`)
 
 | Value                                                          | Where to get it                                                             |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------- |

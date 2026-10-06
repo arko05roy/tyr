@@ -1,0 +1,38 @@
+{
+  "valid": [
+    {
+      "outcome": 6320,
+      "side": 0,
+      "sizeCents": 2500,
+      "returnUA": "uregtest1lsg9ypg8r478vmv226f7je53c6de7w9lq5d974t0jcnu7nhjlk27h63egwvycjafrt75cneg8q3af0ck5t6rtc55p0nrrz436vexnc5u",
+      "nonce": "0001020304050607",
+      "memo": "tyr1:AQAAGLAAAAAJxHF1cmVndGVzdDFsc2c5eXBnOHI0Nzh2bXYyMjZmN2plNTNjNmRlN3c5bHE1ZDk3NHQwamNudTduaGpsazI3aDYzZWd3dnljamFmcnQ3NWNuZWc4cTNhZjBjazV0NnJ0YzU1cDBucnJ6NDM2dmV4bmM1dQABAgMEBQYHiD3MOQ"
+    },
+    {
+      "outcome": 0,
+      "side": 1,
+      "sizeCents": 0,
+      "returnUA": "u1x",
+      "nonce": "ffffffffffffffff",
+      "memo": "tyr1:AQAAAAABAAAAAAN1MXj___________kcl1w"
+    },
+    {
+      "outcome": 4294967295,
+      "side": 1,
+      "sizeCents": 4294967295,
+      "returnUA": "utest1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+      "nonce": "a1b2c3d4e5f60718",
+      "memo": "tyr1:Af____8B______91dGVzdDFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXFxcXGhssPU5fYHGFNqQO4"
+    }
+  ],
+  "invalid": [
+    "",
+    "hello",
+    "tyr2:AQAAGLAAAAAJxHF1cmVndGVzdDFsc2c5eXBnOHI0Nzh2bXYyMjZmN2plNTNjNmRlN3c5bHE1ZDk3NHQwamNudTduaGpsazI3aDYzZWd3dnljamFmcnQ3NWNuZWc4cTNhZjBjazV0NnJ0YzU1cDBucnJ6NDM2dmV4bmM1dQABAgMEBQYHiD3MOQ",
+    "tyr1:",
+    "tyr1:!!!",
+    "tyr1:AQAAGbAAAAAJxHF1cmVndGVzdDFsc2c5eXBnOHI0Nzh2bXYyMjZmN2plNTNjNmRlN3c5bHE1ZDk3NHQwamNudTduaGpsazI3aDYzZWd3dnljamFmcnQ3NWNuZWc4cTNhZjBjazV0NnJ0YzU1cDBucnJ6NDM2dmV4bmM1dQABAgMEBQYHiD3MOQ",
+    "tyr1:AQAAGLAAAAAJxHF1cmVndGVzdDFsc2c5eXBnOHI0Nzh2bXYyMjZmN2plNTNjNmRlN3c5bHE1ZDk3NHQwamNudTduaGpsazI3aDYzZWd3dnljamFmcnQ3NWNuZWc4cTNhZjBjazV0NnJ0YzU1cDBucnJ6NDM2dmV4bmM1dQABAgMEBQYHiD3MOA",
+    "tyr1:AQAAGLAAAAAJxHF1cmVndGVzdDFsc2c5eXBnOHI0Nzh2bXYyMjZmN2plNTNjNmRlN3c5bHE1ZDk3NHQwamNudTduaGpsazI3aDYzZWd3dnljamFmcnQ3NWNuZWc4cTNhZjBjazV0NnJ0YzU1cDBucnJ6NDM2dmV4bmM1dQABAgMEBQYHiD3M"
+  ]
+}

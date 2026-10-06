@@ -1,0 +1,17 @@
+{
+  "name": "@tyr/zcash",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tyr/db": "workspace:*",
+    "@tyr/hyperliquid": "workspace:*",
+    "@tyr/pipeline": "workspace:*"
+  }
+}

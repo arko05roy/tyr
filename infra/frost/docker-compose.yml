@@ -1,0 +1,26 @@
+# PRD 7.5 — three FROST signers, one key share each, separate containers (owner decision, Stop 7).
+# Shares come from `frost-keygen keys/frost` (gitignored). Each container mounts ONLY its own share.
+name: tyr-frost
+x-signer: &signer
+  build: ../../services/frost-signer
+  environment:
+    FROST_STATE_DIR: /state
+    FROST_MAX_PAYOUT_ZAT: '${FROST_MAX_PAYOUT_ZAT:-1000000000}'
+    FROST_SHARE_FILE: /share.json
+services:
+  signer1:
+    <<: *signer
+    volumes: ['../../keys/frost/signer1.json:/share.json:ro', 'state1:/state']
+    ports: ['127.0.0.1:7101:7100']
+  signer2:
+    <<: *signer
+    volumes: ['../../keys/frost/signer2.json:/share.json:ro', 'state2:/state']
+    ports: ['127.0.0.1:7102:7100']
+  signer3:
+    <<: *signer
+    volumes: ['../../keys/frost/signer3.json:/share.json:ro', 'state3:/state']
+    ports: ['127.0.0.1:7103:7100']
+volumes:
+  state1:
+  state2:
+  state3:

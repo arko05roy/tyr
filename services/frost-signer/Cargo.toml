@@ -1,0 +1,26 @@
+[package]
+name = "frost-signer"
+version = "0.1.0"
+edition = "2021"
+description = "PRD 7.5 — one FROST (RedPallas) 2-of-3 signer share for tyr Zcash payout instructions"
+
+[lib]
+name = "frost_payout"
+path = "src/lib.rs"
+
+[[bin]]
+name = "frost-signer"
+path = "src/main.rs"
+
+[[bin]]
+name = "frost-keygen"
+path = "src/bin/keygen.rs"
+
+[dependencies]
+reddsa = { version = "0.5.2", features = ["frost", "serde"] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync"] }

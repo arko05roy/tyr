@@ -7,7 +7,8 @@
     "tempo-indexer": "tsx src/tempo-indexer.ts",
     "typecheck": "tsc --noEmit",
     "settlement": "tsx src/settlement.ts",
-    "funding": "tsx src/funding.ts"
+    "funding": "tsx src/funding.ts",
+    "zcash": "tsx src/zcash.ts"
   },
   "dependencies": {
     "@tyr/db": "workspace:*",
@@ -15,6 +16,7 @@
     "@tyr/hyperliquid": "workspace:*",
     "@tyr/pipeline": "workspace:*",
     "@tyr/tempo": "workspace:*",
+    "@tyr/zcash": "workspace:*",
     "bullmq": "^5.81.5",
     "dotenv": "^16.4.7",
     "viem": "^2.57.3"
