@@ -6,6 +6,7 @@ import type { Executor } from '@tyr/hyperliquid';
 import { settlementWorker } from '@tyr/pipeline';
 import { fundingWorker } from '@tyr/evm-deposits';
 import { zcashWorker } from '@tyr/zcash';
+import { hedgeWorker } from '@tyr/robinhood';
 
 export const SETTLEMENT_QUEUE = 'settlement';
 export const FUNDING_QUEUE = 'funding';
@@ -23,12 +24,17 @@ export async function startSettlement(
 ) {
   const name = opts.queueName ?? SETTLEMENT_QUEUE;
   const tick = settlementWorker(db, exec);
+  const hedges = hedgeWorker(db); // PRD 9.5: close hedges after their bet settles
   const queue = new Queue(name, { connection: connection(opts.redisUrl) });
   await queue.upsertJobScheduler('tick', { every: opts.everyMs }, { name: 'tick' });
-  const worker = new Worker(name, async () => ({ settled: await tick() }), {
-    connection: connection(opts.redisUrl),
-    concurrency: 1,
-  });
+  const worker = new Worker(
+    name,
+    async () => ({ settled: await tick(), hedgesClosed: await hedges() }),
+    {
+      connection: connection(opts.redisUrl),
+      concurrency: 1,
+    },
+  );
   return {
     queue,
     worker,

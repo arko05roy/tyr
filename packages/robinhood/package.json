@@ -1,0 +1,20 @@
+{
+  "name": "@tyr/robinhood",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tyr/db": "workspace:*",
+    "@tyr/hyperliquid": "workspace:*",
+    "@tyr/pipeline": "workspace:*",
+    "@tyr/solana": "workspace:*",
+    "@tyr/tempo": "workspace:*",
+    "viem": "^2.57.3"
+  }
+}

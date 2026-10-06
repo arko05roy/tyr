@@ -8,6 +8,7 @@ import { agentRoutes } from './routes/agent.js';
 import { authRoutes } from './routes/auth.js';
 import { balanceRoutes, betRoutes } from './routes/bets.js';
 import { depositRoutes } from './routes/deposits.js';
+import { hedgeRoutes } from './routes/hedge.js';
 import { limitRoutes } from './routes/limits.js';
 import { marketRoutes } from './routes/markets.js';
 import { sponsorRoutes } from './routes/sponsor.js';
@@ -38,6 +39,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(balanceRoutes, { prefix: '/api/balance' });
   await app.register(depositRoutes, { prefix: '/api/deposits' });
   await app.register(zcashRoutes, { prefix: '/api/zcash' });
+  await app.register(hedgeRoutes, { prefix: '/api/hedge' });
   await app.register(wsRoutes);
   return app;
 }

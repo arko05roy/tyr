@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-06, Phase 8)
+## Progress (updated 2026-10-06, Phase 9)
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -17,13 +17,15 @@
 | 6 — Funding router       | ✅ Done                     | Solana USDC, Tempo, RH ETH, API, worker green live; EVM USDC live tests waived (opt-in)          |
 | 7 — Zcash                | ✅ Done (regtest, fallback) | 17/17 (memo TS+Rust, FROST 2-of-3 live containers, Flow B e2e + refund); Stop 7 resolved         |
 | 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green |
-| 9 — Robinhood hedge      | ⏭ Next (🛑 Stop 9)          |                                                                                                  |
-| 10–13                    | ⬜ Not started              |                                                                                                  |
+| 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green           |
+| 10 — Receipts & proofs   | ⏭ Next                      |                                                                                                  |
+| 11–13                    | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
 - **Hyperliquid execution simulated** — paper fills against the live HL testnet book (`simulated: true`, no fake oids/hashes). Testnet USDC needs an HL-mainnet-history address (drip and Circle CCTP both enforce it). Builder-fee proof deferred.
-- **Robinhood hedge swap simulated** — real RH testnet Stock Tokens + balances; price from HL testnet `xyz` mids (no official Chainlink feed / Uniswap pool on RH testnet).
+- **Robinhood hedge swap simulated** — real RH testnet Stock Tokens + balances; price from HL testnet `xyz` oracle (no official Chainlink feed / Uniswap pool on RH testnet). Hedge cash moves on the real Solana CT bankroll.
+- **Geofence is self-declared region only** (no MaxMind IP lookup), blocked = US, CA, GB, CH, AE.
 - **FROST authorizes Zcash payout instructions, not the spend itself** — zingolib can't consume external spend-auth signatures; 2-of-3 signers gate every payout the hot wallet sends.
 - **Zcash on local regtest** (`infra/zcash-regtest`, zebrad 6.3.0 + zainod 0.10.1) — no reachable TAZ faucet. Shielded pool on this chain is Ironwood (Orchard's successor).
 
@@ -361,17 +363,20 @@ _Choose one source of truth for user funds:_ **Solana confidential balance is th
 
 ---
 
-## Phase 9 — Robinhood Chain hedge (Flow D)
+## Phase 9 — Robinhood Chain hedge (Flow D) — ✅ DONE (simulated swap)
+
+> Built as `packages/robinhood` (geofence, rule-based mapping, xyz oracle price, simulated swap, hedge open/close + combined receipt, `hedgeWorker` on the settlement BullMQ tick) and API `PUT /api/auth/region`, `GET /api/hedge/markets/:marketId`, `GET /api/hedge/:orderId/quote`, `POST /api/hedge`, `GET /api/hedge[/:orderId]`.
+> A hedge attaches to an open, filled bet (≤ its stake, one per bet). Open = real CT user → escrow + swap simulated at the oracle less 30bp fee + 20bp slippage (`uniswapTx`/`chainlinkRound` stay null — no fake hashes). `sell` hedges are capped by real hot-wallet inventory. After the bet settles, the worker prices the exit, pays value escrow → user (CT), and writes a `bet+hedge` Receipt whose keccak hash is anchored by a zero-value Tempo memo tx.
 
 **Package:** `packages/robinhood`
 
-9.1 **Geofence gate:** IP geolocation (MaxMind GeoLite2) + self-declared region at signup; hide hedge for US, CA, GB, CH, AE and sanctioned countries. Server-side enforcement on `/api/hedge`.
-9.2 **Market → hedge mapping table:** HL macro/finance market ID → index-ETF Stock Token + direction (human-curated).
-9.3 **Chainlink reader:** `latestRoundData()` via viem on the token's feed; stale-price check.
-9.4 **Uniswap swap:** quote via the Uniswap Quoter / Universal Router deployed on Robinhood Chain testnet; execute from the tyr hot wallet on behalf of the user (custodial for hackathon; disclosed).
-9.5 **Combined receipt:** bet payout + hedge P&L in one record, memo-tagged Tempo receipt.
+✅ 9.1 **Geofence gate:** _(self-declared only, Stop 9)_ IP geolocation (MaxMind GeoLite2) + self-declared region at signup; hide hedge for US, CA, GB, CH, AE and sanctioned countries. Server-side enforcement on `/api/hedge`.
+✅ 9.2 **Market → hedge mapping table:** _(rules over templates; owner approval pending)_ HL macro/finance market ID → index-ETF Stock Token + direction (human-curated).
+⚠️ 9.3 **Chainlink reader:** _(HL xyz oraclePx + divergence check; no Chainlink on RH testnet)_ `latestRoundData()` via viem on the token's feed; stale-price check.
+⚠️ 9.4 **Uniswap swap:** _(simulated; real CT debit/credit + inventory check)_ quote via the Uniswap Quoter / Universal Router deployed on Robinhood Chain testnet; execute from the tyr hot wallet on behalf of the user (custodial for hackathon; disclosed).
+✅ 9.5 **Combined receipt:** bet payout + hedge P&L in one record, memo-tagged Tempo receipt.
 
-🛑 **HUMAN STOP 9**
+🛑 **HUMAN STOP 9** ✅ resolved (see `docs/human-values.md`)
 
 | Value                                                         | Where to get it                                                          |
 | ------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -382,6 +387,7 @@ _Choose one source of truth for user funds:_ **Solana confidential balance is th
 | Market → Stock Token hedge mapping                            | human curates from Stop 4 market list                                    |
 
 **Tests (live RH testnet):** `rh.chainlink.test.ts` (fresh price, 8 decimals), `rh.swap.test.ts` (real swap, balance delta matches quote within slippage), `rh.geofence.test.ts` (US IP → 403 from real GeoLite2 db).
+_Shipped as:_ ✅ `rh.price.test.ts` (live oracle + on-chain symbol/inventory, stale rejection), ✅ `rh.mapping.test.ts` (live outcomes), ✅ `rh.swap.test.ts` (quote + value math, inventory), ✅ `e2e.flowD.test.ts` (geofence 403s via HTTP, bet → hedge → settle → combined receipt + Tempo memo).
 
 ---
 

@@ -211,8 +211,27 @@ model Hedge {
   stockToken     String
   amountIn       Decimal @db.Decimal(36, 18)
   amountOut      Decimal @db.Decimal(36, 18)
-  uniswapTx      String
-  chainlinkRound String
+  uniswapTx      String? // null while the swap leg is simulated (owner-approved deviation)
+  chainlinkRound String? // null while the price is the HL testnet xyz mid (owner-approved deviation)
+
+  // Phase 9 (Flow D). amountIn = USD debited from the bankroll; amountOut = stock shares.
+  userId       String
+  symbol       String
+  direction    String // buy | sell (sell = synthetic short against hot-wallet inventory)
+  entryPx      Decimal  @db.Decimal(36, 8)
+  priceSource  String
+  priceAt      DateTime
+  simulated    Boolean  @default(true)
+  status       String   @default("open") // open | closed
+  escrowTx     String? // confidential transfer user → escrow (real, devnet)
+  exitPx       Decimal? @db.Decimal(36, 8)
+  valueUsd     Decimal? @db.Decimal(18, 6)
+  payTx        String? // confidential transfer escrow → user (real, devnet)
+  escrowTopUpTx String?
+  receiptId    String?  @unique
+  receiptTx    String? // Tempo transferWithMemo carrying memo32(receiptId)
+  createdAt    DateTime @default(now())
+  closedAt     DateTime?
 }
 
 model AgentSession {

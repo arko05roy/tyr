@@ -115,3 +115,32 @@ zingo-cli is built from zingolib with `--no-default-features --features nakednet
 | ZEC/USD rate source  | public price API (CoinGecko simple price, read-only); rate used is persisted on each `ZcashOrder`                                                                            | owner decision               |
 | FROST signer hosting | 3 separate containers on the same box, one key share each                                                                                                                    | owner decision               |
 | FROST spend fallback | **approved**: if Orchard/Ironwood spends can't consume FROST sigs, 2-of-3 FROST signs the payout instruction; hot wallet executes only valid-signed instructions (disclosed) | owner decision               |
+
+## HUMAN STOP 9 values (owner answers 2026-10-06)
+
+| Value                         | Answer                                                                                                                                       | Source                             |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Geofence input                | **Self-declared region only** (`PUT /api/auth/region`, ISO alpha-2). No IP geolocation / MaxMind key. Undeclared region → hedge not offered. | Owner                              |
+| Blocked regions               | PRD default list: US, CA, GB, CH, AE (no extra sanctions list)                                                                               | Owner ("1")                        |
+| Market → hedge mapping        | Rule-based over HL outcome templates (table below), proposed by builder, **pending owner approval**                                          | Owner: "auto-propose, you approve" |
+| Stock Tokens                  | Official faucet tokens (section above); no index ETF exists on RH testnet                                                                    | Stop 1 / S5                        |
+| Chainlink / Uniswap addresses | None exist on RH testnet — covered by the 2026-10-05 simulated-swap decision                                                                 | S5                                 |
+
+Hedge mapping rules (`packages/robinhood/src/mapping.ts`). A hedge pays when the bet loses; NO bets take the opposite trade.
+
+| HL market                                        | Stock                  | Trade offsetting a YES bet |
+| ------------------------------------------------ | ---------------------- | -------------------------- |
+| `binaryPrice*` on US500 / S&P index              | AMZN (large-cap proxy) | sell                       |
+| `binaryPrice*` on `xyz:TSLA/AMD/AMZN/NFLX/PLTR`  | same stock             | sell                       |
+| Fed hike (`policyRateIncrease`, increase bucket) | AMZN                   | buy                        |
+| Fed cut (`policyRateDecrease`, decrease bucket)  | AMZN                   | sell                       |
+| CPI "Above x%"                                   | AMZN                   | buy                        |
+| CPI "Below x%"                                   | AMZN                   | sell                       |
+| US government stake in Nvidia                    | AMD                    | sell                       |
+| anything else (sports, crypto, …)                | — no hedge             |                            |
+
+| Date       | Decision                                                                                                                                                                                                                                            | Approved by                               | Reason                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 2026-10-06 | **Geofence = self-declared region, no IP lookup** (PRD 9.1 called for MaxMind GeoLite2). Enforced server-side on every `/api/hedge` route. `rh.geofence` is covered by the Flow D e2e via HTTP instead of a GeoLite2 IP test.                       | Human (project owner), Stop 9             | Owner choice.                                                                                           |
+| 2026-10-06 | **Hedge price = HL testnet `xyz` `oraclePx`** (not the book mid named in the 2026-10-05 decision): xyz books are one-sided on testnet. HL exposes no oracle timestamp, so the stale check rejects a missing price or one diverging > 25% from mark. | Builder (within the 2026-10-05 deviation) | No two-sided book; oracle is the closest analog to a Chainlink answer.                                  |
+| 2026-10-06 | **Combined receipt anchor = zero-value Tempo `transferWithMemo`** to the user, memo = keccak256("receipt:<id>"). Hedge cash moves on the Solana CT bankroll (debit on open, credit on close), not on Tempo.                                         | Builder                                   | Keeps one source of truth for funds (PRD 5.1) while still giving a memo-tagged Tempo receipt (PRD 9.5). |

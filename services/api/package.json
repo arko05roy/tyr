@@ -16,6 +16,7 @@
     "@tyr/evm-deposits": "workspace:*",
     "@tyr/hyperliquid": "workspace:*",
     "@tyr/pipeline": "workspace:*",
+    "@tyr/robinhood": "workspace:*",
     "@tyr/solana": "workspace:*",
     "@tyr/tempo": "workspace:*",
     "@tyr/zcash": "workspace:*",
