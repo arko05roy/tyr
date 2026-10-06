@@ -19,7 +19,7 @@
 | 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green |
 | 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green           |
 | 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green              |
-| 11 — API surface freeze  | ✅ Done (1 re-run pending)  | contract 7/7 live, 45 ops; Flow A/C/D + receipts green in strict mode; api.deposits needs RH ETH |
+| 11 — API surface freeze  | ✅ Done                     | contract 7/7 live, 45 ops; all API suites (Flow A/C/D, deposits, receipts) green in strict mode  |
 | 12 — Frontend            | ⏭ Next                      |                                                                                                  |
 | 13                       | ⬜ Not started              |                                                                                                  |
 
@@ -437,7 +437,7 @@ Publish an OpenAPI spec (`services/api/openapi.yaml`, generated from zod via `fa
 | WS      | `/ws`                                            | live order/settlement/deposit events        |
 
 **Tests:** `api.contract.test.ts` — every route against the running server, schema validated; full e2e re-run of Flows A–D through HTTP only.
-_Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protected op returns 401 to anonymous callers; every agent op returns 403 to an unconfirmed key; all 45 ops are exercised through `@tyr/api-client` with no 5xx under strict mode; a real public `bet` receipt (proof + verify) and a Flow B receipt/disclosure; every persisted Order/Deposit/Hedge row matches its schema. ✅ Strict-mode re-runs green: `e2e.flowA`, `e2e.flowD`, `agent.mpp`, `agent.bet`, `api.tempo`, `api.hl`, `receipts`. ⚠️ `api.deposits` is pending re-run: the EVM test sender `0xf588…25c0` has no RH testnet ETH (`insufficient funds`), so this is unrelated to the code. Flow B's HTTP surface is covered by the contract test; its pipeline e2e lives in `packages/zcash`.
+_Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protected op returns 401 to anonymous callers; every agent op returns 403 to an unconfirmed key; all 45 ops are exercised through `@tyr/api-client` with no 5xx under strict mode; a real public `bet` receipt (proof + verify) and a Flow B receipt/disclosure; every persisted Order/Deposit/Hedge row matches its schema. ✅ Strict-mode re-runs green: `e2e.flowA`, `e2e.flowD`, `agent.mpp`, `agent.bet`, `api.tempo`, `api.hl`, `receipts`. ✅ `api.deposits` re-run green in strict mode, after seeding the test sender with 0.002 RH ETH from the hot wallet. Flow B's HTTP surface is covered by the contract test; its pipeline e2e lives in `packages/zcash`.
 
 ✅ **Backend done gate:** all phase suites green on live testnets in one CI run; `docs/evidence.md` updated.
 
