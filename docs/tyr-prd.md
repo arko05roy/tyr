@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-06, Phase 9)
+## Progress (updated 2026-10-06, Phase 10)
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -18,8 +18,9 @@
 | 7 — Zcash                | ✅ Done (regtest, fallback) | 17/17 (memo TS+Rust, FROST 2-of-3 live containers, Flow B e2e + refund); Stop 7 resolved         |
 | 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green |
 | 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green           |
-| 10 — Receipts & proofs   | ⏭ Next                      |                                                                                                  |
-| 11–13                    | ⬜ Not started              |                                                                                                  |
+| 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green              |
+| 11 — API surface freeze  | ⏭ Next                      |                                                                                                  |
+| 12–13                    | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -391,13 +392,17 @@ _Shipped as:_ ✅ `rh.price.test.ts` (live oracle + on-chain symbol/inventory, s
 
 ---
 
-## Phase 10 — Receipts & proofs
+## Phase 10 — Receipts & proofs — ✅ DONE
 
-10.1 `Receipt` records for every payout with hash of canonical JSON; visibility private/public.
-10.2 "Prove" exports: Tempo tx + memo; Solana auditor attestation (3.5); Zcash viewing-key disclosure (7.7).
-10.3 Public verification page reads the chain directly to verify a receipt.
+> Built as `packages/receipts` (issue / prove / verify) + API `/api/receipts[/:id[/proof|/verify|/visibility]]` and `GET /api/zcash/orders/:txid/receipt`. Issuance runs on the settlement and zcash BullMQ ticks; idempotent on (kind, subjectId).
+> Kinds: `bet` (Flow A / agent), `zcash-payout` (Flow B), `bet+hedge` (Flow D, Tempo-anchored; pre-Phase-10 rows backfilled only if the recomputed hash matches).
+> Verification reads chains, not the DB: Tempo `TransferWithMemo` log (token, to, amount, memo), Solana settle tx + Position PDA (settled, outcome, payout_commitment opened with the stored salt), CT tx source/destination, auditor attestation signature/tx/amount, Zcash OVK view = FROST-signed instruction. Private receipts → owner only (404 otherwise); publishing caches the proof bundle.
 
-**Tests:** `receipts.test.ts` — generate receipt for a real settlement from Phase 5, verify against chain.
+✅ 10.1 `Receipt` records for every payout with hash of canonical JSON; visibility private/public.
+✅ 10.2 "Prove" exports: Tempo tx + memo; Solana auditor attestation (3.5); Zcash viewing-key disclosure (7.7).
+✅ 10.3 Public verification page reads the chain directly to verify a receipt.
+
+**Tests:** ✅ `receipts.test.ts` — generate receipt for a real settlement from Phase 5, verify against chain. _Plus access control, publish/unpublish, tamper (payout, salt) rejection, existing bet+hedge and zcash-payout receipts._
 
 ---
 

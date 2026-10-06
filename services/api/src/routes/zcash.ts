@@ -3,6 +3,7 @@
 // GET /api/zcash/orders/:txid → status of the order a shielded note created.
 // GET /api/zcash/orders/:txid/disclosure → per-payout viewing-key receipt (PRD 7.7). Holding the
 // order txid (only the payer knows it) is the capability to see this single payout.
+import { verifyReceipt } from '@tyr/receipts';
 import { ZcashRequestError, zcashDisclosure, zcashRequest } from '@tyr/zcash';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
@@ -54,5 +55,19 @@ export const zcashRoutes: FastifyPluginAsync = async (app) => {
     const d = await zcashDisclosure(app.db, req.params.txid);
     if (!d) return reply.code(404).send({ error: 'no paid-out order for that txid' });
     return d;
+  });
+
+  // PRD 10: Flow B bettors have no account, so the order txid is the capability (as above).
+  app.get<{ Params: { txid: string } }>('/orders/:txid/receipt', async (req, reply) => {
+    const r = await app.db.receipt.findUnique({
+      where: { kind_subjectId: { kind: 'zcash-payout', subjectId: req.params.txid } },
+    });
+    if (!r) return reply.code(404).send({ error: 'no receipt for that txid yet' });
+    return {
+      id: r.id,
+      payloadHash: r.payloadHash,
+      payload: r.payload,
+      verification: await verifyReceipt(app.db, r),
+    };
   });
 };

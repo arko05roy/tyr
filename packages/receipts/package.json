@@ -1,5 +1,5 @@
 {
-  "name": "@tyr/robinhood",
+  "name": "@tyr/receipts",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,10 +12,11 @@
   "dependencies": {
     "@tyr/core": "workspace:*",
     "@tyr/db": "workspace:*",
-    "@tyr/hyperliquid": "workspace:*",
     "@tyr/pipeline": "workspace:*",
+    "@tyr/robinhood": "workspace:*",
     "@tyr/solana": "workspace:*",
     "@tyr/tempo": "workspace:*",
+    "@tyr/zcash": "workspace:*",
     "viem": "^2.57.3"
   }
 }

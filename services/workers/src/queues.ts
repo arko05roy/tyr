@@ -7,6 +7,7 @@ import { settlementWorker } from '@tyr/pipeline';
 import { fundingWorker } from '@tyr/evm-deposits';
 import { zcashWorker } from '@tyr/zcash';
 import { hedgeWorker } from '@tyr/robinhood';
+import { issueReceipts } from '@tyr/receipts';
 
 export const SETTLEMENT_QUEUE = 'settlement';
 export const FUNDING_QUEUE = 'funding';
@@ -29,7 +30,11 @@ export async function startSettlement(
   await queue.upsertJobScheduler('tick', { every: opts.everyMs }, { name: 'tick' });
   const worker = new Worker(
     name,
-    async () => ({ settled: await tick(), hedgesClosed: await hedges() }),
+    async () => ({
+      settled: await tick(),
+      hedgesClosed: await hedges(),
+      receipts: await issueReceipts(db), // PRD 10.1: a receipt for every finished payout
+    }),
     {
       connection: connection(opts.redisUrl),
       concurrency: 1,
@@ -80,10 +85,15 @@ export async function startZcash(
   const tick = zcashWorker(db, exec);
   const queue = new Queue(name, { connection: connection(opts.redisUrl) });
   await queue.upsertJobScheduler('tick', { every: opts.everyMs }, { name: 'tick' });
-  const worker = new Worker(name, () => tick(), {
-    connection: connection(opts.redisUrl),
-    concurrency: 1,
-  });
+  const worker = new Worker(
+    name,
+    async () => {
+      const r = await tick();
+      await issueReceipts(db); // PRD 10.1: zcash-payout receipts
+      return r;
+    },
+    { connection: connection(opts.redisUrl), concurrency: 1 },
+  );
   return {
     queue,
     worker,

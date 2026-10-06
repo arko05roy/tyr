@@ -186,8 +186,38 @@ importers:
         specifier: ^2.57.3
         version: 2.57.3(typescript@5.9.3)(zod@4.6.5)
 
+  packages/receipts:
+    dependencies:
+      '@tyr/core':
+        specifier: workspace:*
+        version: link:../core
+      '@tyr/db':
+        specifier: workspace:*
+        version: link:../db
+      '@tyr/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@tyr/robinhood':
+        specifier: workspace:*
+        version: link:../robinhood
+      '@tyr/solana':
+        specifier: workspace:*
+        version: link:../solana
+      '@tyr/tempo':
+        specifier: workspace:*
+        version: link:../tempo
+      '@tyr/zcash':
+        specifier: workspace:*
+        version: link:../zcash
+      viem:
+        specifier: ^2.57.3
+        version: 2.57.3(typescript@5.9.3)(zod@4.6.5)
+
   packages/robinhood:
     dependencies:
+      '@tyr/core':
+        specifier: workspace:*
+        version: link:../core
       '@tyr/db':
         specifier: workspace:*
         version: link:../db
@@ -281,6 +311,9 @@ importers:
       '@tyr/pipeline':
         specifier: workspace:*
         version: link:../../packages/pipeline
+      '@tyr/receipts':
+        specifier: workspace:*
+        version: link:../../packages/receipts
       '@tyr/robinhood':
         specifier: workspace:*
         version: link:../../packages/robinhood
@@ -330,6 +363,9 @@ importers:
       '@tyr/pipeline':
         specifier: workspace:*
         version: link:../../packages/pipeline
+      '@tyr/receipts':
+        specifier: workspace:*
+        version: link:../../packages/receipts
       '@tyr/robinhood':
         specifier: workspace:*
         version: link:../../packages/robinhood

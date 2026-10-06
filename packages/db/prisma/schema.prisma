@@ -279,6 +279,18 @@ model Receipt {
   proofRef    String?
   visibility  Visibility @default(private)
   createdAt   DateTime   @default(now())
+
+  // Phase 10. payload = the canonical-JSON body payloadHash commits to (keccak256); subjectId =
+  // Order.id (bet, bet+hedge) or ZcashOrder.txid (zcash-payout). proof = cached prove bundle
+  // (auditor attestation etc.), built when the owner proves / publishes the receipt.
+  userId    String?
+  subjectId String?
+  payload   Json?
+  proof     Json?
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([kind, subjectId])
+  @@index([userId])
 }
 
 model Session {

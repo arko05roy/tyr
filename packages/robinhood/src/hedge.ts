@@ -25,6 +25,7 @@ import {
 import { confidentialTransfer, escrowKeys } from '@tyr/solana';
 import { payout } from '@tyr/tempo';
 import { keccak256, toHex, type Address } from 'viem';
+import { canonicalJson } from '@tyr/core';
 import { STOCK_TOKENS, walletShares, type StockSymbol } from './chain.js';
 import { hedgeEligibility } from './geofence.js';
 import { hedgeDirection, hedgeRule, type Direction } from './mapping.js';
@@ -179,16 +180,6 @@ export async function openHedge(
   return h;
 }
 
-const canonical = (v: unknown): string =>
-  Array.isArray(v)
-    ? `[${v.map(canonical).join(',')}]`
-    : v && typeof v === 'object'
-      ? `{${Object.keys(v)
-          .sort()
-          .map((k) => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`)
-          .join(',')}}`
-      : JSON.stringify(v);
-
 /**
  * Close a hedge once its bet has settled: price at a fresh mark, pay value escrow → user (real CT),
  * then write the combined bet + hedge receipt and anchor it on Tempo. Every write is persisted
@@ -236,7 +227,10 @@ export async function closeHedge(db: PrismaClient, orderId: string) {
     const r = await db.receipt.create({
       data: {
         kind: 'bet+hedge',
-        payloadHash: keccak256(toHex(canonical(payload))),
+        payloadHash: keccak256(toHex(canonicalJson(payload))),
+        payload,
+        userId: h.userId,
+        subjectId: orderId,
         visibility: 'private',
       },
     });
