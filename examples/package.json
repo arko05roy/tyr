@@ -1,18 +1,14 @@
 {
-  "name": "@tyr/tempo",
+  "name": "@tyr/examples",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "scripts": {
+    "agent": "tsx agent.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@simplewebauthn/server": "^13.1.1",
-    "@tyr/core": "workspace:*",
-    "@tyr/db": "workspace:*",
+    "dotenv": "^16.4.7",
     "mppx": "0.13.1",
     "viem": "^2.57.3"
   }

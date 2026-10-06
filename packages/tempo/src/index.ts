@@ -7,3 +7,4 @@ export * from './passkey.js';
 export * from './payout.js';
 export * from './relay.js';
 export { open as openSecret, seal as sealSecret } from './secrets.js';
+export * from './mpp.js';

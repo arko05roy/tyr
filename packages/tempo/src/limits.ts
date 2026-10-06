@@ -31,13 +31,15 @@ export async function authorizeAccessKey(params: {
   period: Period;
   expiresAt: Date;
   sponsorRelayUrl?: string;
+  /** p256 = backend-held loss-limit key; secp256k1 = an agent's own key (Phase 8) */
+  keyType?: 'p256' | 'secp256k1';
 }): Promise<Hex> {
   const transport = params.sponsorRelayUrl
     ? withRelay(http(rpcUrl()), http(params.sponsorRelayUrl))
     : withRelay(http(rpcUrl()), { plugins: [Relay.feePayer({ account: treasuryAccount() })] });
   const client = createClient({ account: params.user, chain, transport }).extend(publicActions);
   const hash = await Actions.accessKey.authorize(client, {
-    accessKey: { accessKeyAddress: params.accessKeyAddress, keyType: 'p256' },
+    accessKey: { accessKeyAddress: params.accessKeyAddress, keyType: params.keyType ?? 'p256' },
     expiry: Math.floor(params.expiresAt.getTime() / 1000),
     limits: [{ token: ALPHA_USD, limit: params.limitUsd, period: PERIOD_SECONDS[params.period] }],
     feePayer: true,

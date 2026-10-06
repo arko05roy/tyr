@@ -45,8 +45,12 @@ export type BetInput = {
    * float (Flow B, Zcash): the user already paid in shielded ZEC to tyr, so tyr's float covers the
    * HL order — no Tempo stake and no confidential user → escrow leg; the order starts at
    * `escrowed` and still opens a real Solana position before executing.
+   * prepaid (Flow C, agents): the stake authorization already landed on Tempo as the agent's MPP
+   * payment (`stakeTx`, capped by its access key); the order starts at `staked`.
    */
-  funding?: 'bankroll' | 'float';
+  funding?: 'bankroll' | 'float' | 'prepaid';
+  stakeTx?: string | undefined;
+  agentSessionId?: string | undefined;
 };
 
 export class BetRejectedError extends Error {
@@ -80,6 +84,17 @@ async function quote(input: BetInput) {
   return { limitPx, sz };
 }
 
+/** Validate market, size and bankroll without side effects — run before taking an agent's payment. */
+export async function preflightBet(db: PrismaClient, input: BetInput) {
+  const q = await quote(input);
+  if (input.funding !== 'float') {
+    const keys = await confidentialAccount(db, input.userId);
+    if ((await availableBalance(keys)) < units(input.stakeUsd))
+      throw new BetRejectedError('insufficient confidential balance', 'balance');
+  }
+  return q;
+}
+
 export async function placeBet(db: PrismaClient, exec: Executor, input: BetInput) {
   let order = await db.order.findUnique({ where: { idempotencyKey: input.idempotencyKey } });
   if (order && order.userId !== input.userId)
@@ -88,6 +103,7 @@ export async function placeBet(db: PrismaClient, exec: Executor, input: BetInput
   const stake = units(input.stakeUsd);
   const keys = await confidentialAccount(db, input.userId);
   const float = input.funding === 'float';
+  if (input.funding === 'prepaid' && !input.stakeTx) throw new Error('prepaid bet needs stakeTx');
 
   if (!order) {
     const q = await quote(input);
@@ -106,6 +122,10 @@ export async function placeBet(db: PrismaClient, exec: Executor, input: BetInput
         stakeSalt: salt,
         status: 'pending',
         ...(float ? { step: 'escrowed' } : {}),
+        ...(input.funding === 'prepaid'
+          ? { step: 'staked', tempoStakeTx: input.stakeTx ?? null }
+          : {}),
+        ...(input.agentSessionId ? { agentSessionId: input.agentSessionId } : {}),
       },
     });
   }

@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-06)
+## Progress (updated 2026-10-06, Phase 8)
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -16,8 +16,9 @@
 | 5 — Flow A orchestration | ✅ Done                     | e2e Flow A + live refund path green (24/24); BullMQ settlement; HL $10 min mirrored              |
 | 6 — Funding router       | ✅ Done                     | Solana USDC, Tempo, RH ETH, API, worker green live; EVM USDC live tests waived (opt-in)          |
 | 7 — Zcash                | ✅ Done (regtest, fallback) | 17/17 (memo TS+Rust, FROST 2-of-3 live containers, Flow B e2e + refund); Stop 7 resolved         |
-| 8 — Agent API            | ⏭ Next                      |                                                                                                  |
-| 9–13                     | ⬜ Not started              |                                                                                                  |
+| 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green |
+| 9 — Robinhood hedge      | ⏭ Next (🛑 Stop 9)          |                                                                                                  |
+| 10–13                    | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -344,14 +345,19 @@ _Choose one source of truth for user funds:_ **Solana confidential balance is th
 
 ---
 
-## Phase 8 — Agent API (Flow C)
+## Phase 8 — Agent API (Flow C) — ✅ DONE
 
-8.1 API keys scoped to an `AgentSession`; agent authenticates with an ed25519/secp256k1 key registered by the owner.
-8.2 Paid endpoints (`/api/agent/markets/:id/data`, `/api/agent/evidence/:id`) return **HTTP 402** with an MPP challenge; agent pays on Tempo Moderato within its session; server verifies payment on-chain before responding.
-8.3 Agent bets go through the same pipeline with the agent's Tempo session as the cap.
-8.4 Ship a minimal reference agent script (`examples/agent.ts`) that actually trades on testnet.
+> Built on the official MPP SDK `mppx` (tempo `charge`). An agent session is the agent's own secp256k1 key, which the owner's passkey authorizes as a **Tempo access key** with spend limit = cap per period. The chain enforces the cap: an over-cap payment fails with `SpendingLimitExceeded`, and the request stays 402.
+> Agents sign every request (`x-tyr-agent/-timestamp/-signature`, EIP-191 over method, path, ts and sha256(body)). There are no bearer API keys. Paid calls are $0.01 AlphaUSD. tyr co-signs fees and verifies on-chain that the transfer came from the owner's account, then records an `AgentCharge` and updates `spentUsd`.
+> For agent bets, **the MPP charge is the stake authorization**: pipeline `funding: 'prepaid'` starts at `staked`. `preflightBet` runs before charging, so a bet the pipeline would reject never takes a payment. Replaying an idempotency key returns the same order without a new charge.
+> Routes: owner `POST/GET /api/agent/sessions`, `PUT /sessions/:id/confirm`, `DELETE /sessions/:id`. Agent `GET /me`, `/markets`, `/markets/:id/data` 💲, `/evidence/:id` 💲, `POST /bets` 💲, `GET /bets/:id`.
 
-**Tests:** `agent.mpp.test.ts` — 402 → pay → 200; over-cap request → payment reverts → still 402. `agent.bet.test.ts` — reference agent places a real HL testnet order.
+✅ 8.1 API keys scoped to an `AgentSession`; agent authenticates with an ed25519/secp256k1 key registered by the owner.
+✅ 8.2 Paid endpoints (`/api/agent/markets/:id/data`, `/api/agent/evidence/:id`) return **HTTP 402** with an MPP challenge; agent pays on Tempo Moderato within its session; server verifies payment on-chain before responding.
+✅ 8.3 Agent bets go through the same pipeline with the agent's Tempo session as the cap.
+✅ 8.4 Ship a minimal reference agent script (`examples/agent.ts`) that actually trades on testnet.
+
+**Tests:** ✅ `agent.mpp.test.ts`: 402 → pay → 200; over-cap request → payment reverts → still 402. ✅ `agent.bet.test.ts`: the reference agent places a real HL testnet order. _HL leg is paper execution, as in Phase 4._ Plus ✅ `tempo.mpp.test.ts` (SDK-level spike).
 
 ---
 

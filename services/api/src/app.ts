@@ -4,6 +4,7 @@ import { createExecutor, type Executor } from '@tyr/hyperliquid';
 import type { PrismaClient } from '@tyr/db';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { adminRoutes } from './routes/admin.js';
+import { agentRoutes } from './routes/agent.js';
 import { authRoutes } from './routes/auth.js';
 import { balanceRoutes, betRoutes } from './routes/bets.js';
 import { depositRoutes } from './routes/deposits.js';
@@ -31,7 +32,9 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(limitRoutes, { prefix: '/api/limits' });
   await app.register(marketRoutes, { prefix: '/api/markets' });
   await app.register(adminRoutes, { prefix: '/api/admin' });
-  await app.register(betRoutes(deps.executor ?? createExecutor()), { prefix: '/api/bets' });
+  const executor = deps.executor ?? createExecutor();
+  await app.register(betRoutes(executor), { prefix: '/api/bets' });
+  await app.register(agentRoutes(executor), { prefix: '/api/agent' });
   await app.register(balanceRoutes, { prefix: '/api/balance' });
   await app.register(depositRoutes, { prefix: '/api/deposits' });
   await app.register(zcashRoutes, { prefix: '/api/zcash' });

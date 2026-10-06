@@ -3,6 +3,7 @@ packages:
   - services/*
   - packages/*
   - spikes/*
+  - examples
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'

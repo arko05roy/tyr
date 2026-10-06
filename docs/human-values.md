@@ -48,12 +48,12 @@ zingo-cli is built from zingolib with `--no-default-features --features nakednet
 
 ## HUMAN STOP 2 values (defaults accepted by owner 2026-10-05)
 
-| Value                   | Setting                                                            | Source                                                   |
-| ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
-| Stablecoin              | AlphaUSD `0x20c0000000000000000000000000000000000001` (6 dp)       | Moderato faucet token (tempo.xyz/docs/quickstart/faucet) |
-| Access-key / keychain   | via `viem/tempo` `Actions.accessKey` (account keychain precompile) | viem 2.57.3                                              |
-| WebAuthn RP ID / origin | `localhost` / `http://localhost:3000`                              | owner default for dev; `tyr.bet` at Phase 12             |
-| MPP over HTTP 402       | not needed yet (Phase 8)                                           | —                                                        |
+| Value                   | Setting                                                            | Source                                                                 |
+| ----------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Stablecoin              | AlphaUSD `0x20c0000000000000000000000000000000000001` (6 dp)       | Moderato faucet token (tempo.xyz/docs/quickstart/faucet)               |
+| Access-key / keychain   | via `viem/tempo` `Actions.accessKey` (account keychain precompile) | viem 2.57.3                                                            |
+| WebAuthn RP ID / origin | `localhost` / `http://localhost:3000`                              | owner default for dev; `tyr.bet` at Phase 12                           |
+| MPP over HTTP 402       | `mppx` 0.13.1 tempo `charge` (pull mode, tyr fee-payer), AlphaUSD  | mpp.dev / npm `mppx` (Phase 8, no new secret: HMAC of TYR_SECRETS_KEY) |
 
 ## HUMAN STOP 3 values (owner answers 2026-10-05)
 
