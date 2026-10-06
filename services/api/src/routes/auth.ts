@@ -77,7 +77,12 @@ export const authRoutes: TyrPlugin = async (app) => {
     },
     async (req) => {
       const user = userOf(req);
-      return { userId: user.id, tempoAddress: user.tempoAddress, region: user.region };
+      return {
+        userId: user.id,
+        tempoAddress: user.tempoAddress,
+        region: user.region,
+        passkey: { credentialId: user.passkeyCredentialId, publicKey: user.passkeyPublicKey },
+      };
     },
   );
 

@@ -262,7 +262,7 @@ export default function Home() {
                 Your bets. <br />
                 <em>Your business.</em>
               </h2>
-              <a href="#start" className="btn btn-primary pointer-events-auto mt-8">
+              <a href="/start" className="btn btn-primary pointer-events-auto mt-8">
                 Get Started <Arrow />
               </a>
             </div>

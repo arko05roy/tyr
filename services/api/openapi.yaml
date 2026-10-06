@@ -1265,10 +1265,23 @@ paths:
                   region:
                     type: string
                     nullable: true
+                  passkey:
+                    type: object
+                    properties:
+                      credentialId:
+                        type: string
+                      publicKey:
+                        type: string
+                    required:
+                      - credentialId
+                      - publicKey
+                    additionalProperties: false
+                    description: for viem/tempo Account.fromWebAuthnP256 when the passkey signs Tempo txs
                 required:
                   - userId
                   - tempoAddress
                   - region
+                  - passkey
                 additionalProperties: false
         "401":
           description: Error

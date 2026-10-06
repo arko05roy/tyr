@@ -281,6 +281,11 @@ export interface paths {
               userId: string;
               tempoAddress: string;
               region: string | null;
+              /** @description for viem/tempo Account.fromWebAuthnP256 when the passkey signs Tempo txs */
+              passkey: {
+                credentialId: string;
+                publicKey: string;
+              };
             };
           };
         };

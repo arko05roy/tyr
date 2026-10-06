@@ -1,6 +1,7 @@
 "use client";
 
 import Lenis from "lenis";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /** Lenis smooth scrolling, with in-page anchor links eased too. */
@@ -130,7 +131,7 @@ export function Nav() {
             </a>
           ))}
         </div>
-        <a href="#start" className="btn btn-primary !px-5 !py-2 !text-sm">
+        <a href="/start" className="btn btn-primary !px-5 !py-2 !text-sm">
           Get Started <Arrow />
         </a>
       </nav>
@@ -403,12 +404,16 @@ export function FlowTabs() {
 
 /** Passkey button: a press-and-hold fingerprint with a success state. */
 export function PasskeyButton() {
+  const router = useRouter();
   const [state, setState] = useState<"idle" | "holding" | "done">("idle");
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const start = () => {
     if (state === "done") return;
     setState("holding");
-    timer.current = setTimeout(() => setState("done"), 900);
+    timer.current = setTimeout(() => {
+      setState("done");
+      setTimeout(() => router.push("/start"), 450);
+    }, 900);
   };
   const stop = () => {
     clearTimeout(timer.current);

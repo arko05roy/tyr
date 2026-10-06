@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-07, Phase 11b.8)
+## Progress (updated 2026-10-07, Phase 12)
 
 | Phase                    | Status                      | Notes                                                                                             |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -21,8 +21,8 @@
 | 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green               |
 | 11 — API surface freeze  | ✅ Done                     | contract 7/7 live, 45 ops; all API suites (Flow A/C/D, deposits, receipts) green in strict mode   |
 | 11b — Multi-venue layer  | ✅ Done (simulated venues)  | bets on any venue + routed bets through the full saga; e2e.venues live; Flow A/C/D regressions ✅ |
-| 12 — Frontend            | ⏭ Next                      |                                                                                                   |
-| 13                       | ⬜ Not started              |                                                                                                   |
+| 12 — Frontend            | ✅ Done (deploy pending)    | 9 screens on the typed API; Playwright journey green live (passkey → limit → fund → bet → settle) |
+| 13 — Demo & submission   | ⏭ Next                      |                                                                                                   |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -470,7 +470,12 @@ _Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protecte
 
 ---
 
-## Phase 12 — Frontend (Next.js + TypeScript)
+## Phase 12 — Frontend (Next.js + TypeScript) — ✅ DONE (local; Stop 12 deploy values pending)
+
+> Built in `apps/web` (Next 16 App Router). The browser only talks to its own origin: `/api/*` is rewritten to the Fastify API (`TYR_API_URL`, default `:4000`, proxy timeout 5 min for routed sagas), so the `tyr_session` cookie and the WebAuthn origin stay first-party. `/ws` connects to the API host directly (`NEXT_PUBLIC_TYR_WS_URL`), because rewrites don't proxy WebSockets. Data comes through `@tyr/api-client` + TanStack Query, and WS events invalidate the affected queries.
+> Chain contact from the browser is limited to passkey signing: WebAuthn ceremonies (`@simplewebauthn/browser`) and `Actions.accessKey.authorize` with `Account.fromWebAuthnP256` over `withRelay(tempo RPC, /api/tempo/sponsor)` for the loss limit and agent caps. For this, `GET /api/auth/me` now also returns `passkey { credentialId, publicKey }` (additive; spec + client regenerated).
+> As built vs the list below: styling uses the landing's own design tokens rather than shadcn/ui. Market detail is per **event** (`/markets/[eventKey]`) with the router quote and a routed bet. The hedge card shows eligibility on the event page, and the hedge itself is opened from Portfolio on a filled HL bet (self-declared region prompt). Agents: the agent key is generated in the browser and shown once (`AGENT_PRIVATE_KEY` for `examples/agent.ts`). Phantom is not wired: Solana devnet deposits show the user's USDC ATA + QR to send from any wallet. Fixed along the way: the router re-fetched books before sizing legs, and simulated-book drift could drop every leg (empty quote). It now sizes against the snapshot it split on.
+> Run: API from the **repo root** (`pnpm exec tsx services/api/src/main.ts`; key paths in `.env` are root-relative), then `pnpm --filter web dev`. E2E: `pnpm --filter web e2e`.
 
 **App:** `apps/web` — Next.js App Router, TypeScript strict, Tailwind + shadcn/ui, TanStack Query, generated `api-client`, `@simplewebauthn/browser`, Phantom via wallet-standard (Solana devnet), viem for Tempo signing where the passkey signs.
 
@@ -489,6 +494,7 @@ Screens (mobile-first):
 Rules: no chain RPC calls from the browser except passkey/Phantom signing; all data via the API; every explorer link points to the testnet explorer.
 
 **Tests:** Playwright e2e against the real backend on testnets, using Chromium's virtual WebAuthn authenticator (CDP `WebAuthn.addVirtualAuthenticator`) — sign up → set limit → fund (devnet) → bet → see settlement. Run before every demo recording.
+_Shipped as:_ ✅ `apps/web/e2e/journey.spec.ts` (3.2 min live): passkey signup in the UI → $60/day limit signed by the virtual passkey on Moderato → bankroll funded (`services/api/test/webE2e.ts fund`, the treasury-mint stand-in from e2e.flowA) → $20 routed YES bet from the event page → Portfolio shows the fill → real close at mark + settle (`webE2e.ts settle`) → "closed · paid" + Tempo payout link. ✅ `api.contract` 7/7 re-run after the `/me` change.
 
 🛑 **HUMAN STOP 12** — brand assets/logo, domain DNS for `tyr.bet` (registrar the human uses), hosting choice (Vercel for web, Railway for API/workers/Postgres/Redis), and production `WEBAUTHN_RP_ID=tyr.bet`.
 

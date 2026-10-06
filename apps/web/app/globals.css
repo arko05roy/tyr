@@ -467,3 +467,39 @@ input[type="range"].limit::-moz-range-thumb {
     opacity: 1;
   }
 }
+
+/* ---------- app (Phase 12) ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 1.25rem;
+}
+.btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.btn-sm {
+  padding: 0.45rem 1rem;
+  font-size: 0.92rem;
+  gap: 0.4rem;
+}
+.field {
+  width: 100%;
+  border: 1.5px solid var(--charcoal);
+  border-radius: 0.8rem;
+  background: var(--cream);
+  padding: 0.7rem 0.9rem;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.field:focus-visible {
+  box-shadow: 0 0 0 3px var(--butter);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82em;
+  word-break: break-all;
+}

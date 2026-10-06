@@ -36,6 +36,9 @@ export const Me = z.object({
   userId: z.string(),
   tempoAddress: EvmAddress,
   region: z.string().nullable(),
+  passkey: z
+    .object({ credentialId: z.string(), publicKey: z.string() })
+    .describe('for viem/tempo Account.fromWebAuthnP256 when the passkey signs Tempo txs'),
 });
 export const AuthResult = z.object({ userId: z.string(), tempoAddress: EvmAddress });
 export const WebAuthnOptions = z

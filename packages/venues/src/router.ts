@@ -93,10 +93,12 @@ export async function routeOrder(
     budget -= n * a.allIn;
   }
 
+  // Size legs against the same snapshot the split was computed on: a second fetch can drift
+  // (simulated books move every 30 s) and walk a leg to zero.
+  const asksOf = new Map(candidates.map((m, i) => [m.id, perVenue[i] ?? []]));
   const legs: Leg[] = [];
   for (const { a, sz, worst } of take.values()) {
-    const book = await a.venue.book(a.market.nativeId, q.side);
-    const w = walk(book.asks, sz, worst);
+    const w = walk(asksOf.get(a.market.id) ?? [], sz, worst);
     if (w.notional < a.venue.info.minOrderUsd) continue;
     const feeUsd = r4(a.venue.takerFee(w.avgPx, w.filled));
     legs.push({
