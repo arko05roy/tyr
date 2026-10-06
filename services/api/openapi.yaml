@@ -1,0 +1,3547 @@
+openapi: 3.0.3
+info:
+  title: tyr.bet API
+  version: 1.0.0
+  description: "Testnet-only. Session auth = signed `tyr_session` cookie from the passkey routes. Agent routes are signed with the agent key (x-tyr-agent / x-tyr-timestamp / x-tyr-signature, EIP-191 over method, path, timestamp, sha256(body)); paid agent routes answer 402 with an MPP challenge. Live events: GET /ws (see WsEvent)."
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: tyr_session
+    agent:
+      type: apiKey
+      in: header
+      name: x-tyr-signature
+    admin:
+      type: http
+      scheme: bearer
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+          description: machine-readable reason (e.g. limit, balance, region)
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              message:
+                type: string
+            required:
+              - path
+              - message
+            additionalProperties: false
+          description: request validation failures
+      required:
+        - error
+      additionalProperties: false
+      description: Error
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        agentSessionId:
+          type: string
+          nullable: true
+        idempotencyKey:
+          type: string
+          nullable: true
+        hlMarket:
+          type: string
+          description: outcome id
+        side:
+          type: string
+          enum:
+            - "yes"
+            - "no"
+        isBuy:
+          type: boolean
+        tif:
+          type: string
+        size:
+          type: string
+          description: decimal number as a string (exact, from Postgres numeric)
+        price:
+          type: string
+          description: decimal number as a string (exact, from Postgres numeric)
+        filledSize:
+          type: string
+          description: decimal number as a string (exact, from Postgres numeric)
+        avgPx:
+          type: string
+          nullable: true
+          description: decimal number as a string (exact, from Postgres numeric)
+        stakeUsd:
+          type: string
+          nullable: true
+          description: decimal number as a string (exact, from Postgres numeric)
+        stakeSalt:
+          type: string
+          nullable: true
+        builderFee:
+          type: string
+          nullable: true
+          description: decimal number as a string (exact, from Postgres numeric)
+        hlOid:
+          type: string
+          nullable: true
+        simulated:
+          type: boolean
+          description: paper fill against the live HL testnet book
+        execution:
+          nullable: true
+        status:
+          type: string
+        step:
+          type: string
+          description: last completed saga step
+        error:
+          type: string
+          nullable: true
+        tempoStakeTx:
+          type: string
+          nullable: true
+        escrowTx:
+          type: string
+          nullable: true
+        solanaOpenTx:
+          type: string
+          nullable: true
+        parentId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        settlement:
+          anyOf:
+            - $ref: "#/components/schemas/Settlement"
+          nullable: true
+      required:
+        - id
+        - userId
+        - agentSessionId
+        - idempotencyKey
+        - hlMarket
+        - side
+        - isBuy
+        - tif
+        - size
+        - price
+        - filledSize
+        - avgPx
+        - stakeUsd
+        - stakeSalt
+        - builderFee
+        - hlOid
+        - simulated
+        - status
+        - step
+        - error
+        - tempoStakeTx
+        - escrowTx
+        - solanaOpenTx
+        - parentId
+        - createdAt
+        - updatedAt
+      additionalProperties: false
+    Settlement:
+      type: object
+      properties:
+        orderId:
+          type: string
+        outcome:
+          type: string
+        pnl:
+          type: string
+          description: decimal number as a string (exact, from Postgres numeric)
+        payoutUsd:
+          type: string
+          description: decimal number as a string (exact, from Postgres numeric)
+        payoutSalt:
+          type: string
+          nullable: true
+        solanaTx:
+          type: string
+          nullable: true
+        escrowPayTx:
+          type: string
+          nullable: true
+        escrowTopUpTx:
+          type: string
+          nullable: true
+        tempoPayoutTx:
+          type: string
+          nullable: true
+        memoHash:
+          type: string
+          nullable: true
+        closeOrderId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - orderId
+        - outcome
+        - pnl
+        - payoutUsd
+        - payoutSalt
+        - solanaTx
+        - escrowPayTx
+        - escrowTopUpTx
+        - tempoPayoutTx
+        - memoHash
+        - closeOrderId
+        - createdAt
+      additionalProperties: false
+    Deposit:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        sourceChain:
+          type: string
+        sourceTx:
+          type: string
+        logIndex:
+          type: integer
+        asset:
+          type: string
+        amount:
+          type: string
+          description: USD credited
+        rawAmount:
+          type: string
+          nullable: true
+        fxRate:
+          type: string
+          nullable: true
+          description: decimal number as a string (exact, from Postgres numeric)
+        fxRound:
+          type: string
+          nullable: true
+        status:
+          anyOf:
+            - type: string
+              enum:
+                - confirmed
+                - minted
+                - credited
+            - type: string
+        mintTx:
+          type: string
+          nullable: true
+        solanaTx:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        creditedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - userId
+        - sourceChain
+        - sourceTx
+        - logIndex
+        - asset
+        - amount
+        - rawAmount
+        - fxRate
+        - fxRound
+        - status
+        - mintTx
+        - solanaTx
+        - createdAt
+        - creditedAt
+      additionalProperties: false
+    Market:
+      type: object
+      properties:
+        outcome:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        template:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        sides:
+          type: array
+          items:
+            type: string
+        resolvesAt:
+          type: string
+          format: date-time
+        "yes":
+          type: object
+          properties:
+            coin:
+              type: string
+            bid:
+              type: number
+            ask:
+              type: number
+            mid:
+              type: number
+          required:
+            - coin
+            - bid
+            - ask
+            - mid
+          additionalProperties: false
+      required:
+        - outcome
+        - name
+        - description
+        - template
+        - sides
+        - resolvesAt
+        - "yes"
+      additionalProperties: false
+    MarketDetail:
+      type: object
+      properties:
+        outcome:
+          type: object
+          properties:
+            outcome:
+              type: integer
+            name:
+              type: string
+            description:
+              type: string
+            sideSpecs:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                required:
+                  - name
+                additionalProperties: true
+            quoteToken:
+              type: string
+            venue:
+              type: string
+          required:
+            - outcome
+            - name
+            - description
+            - sideSpecs
+          additionalProperties: true
+        resolvesAt:
+          type: string
+          format: date-time
+          nullable: true
+        books:
+          type: object
+          properties:
+            "yes":
+              type: object
+              properties:
+                coin:
+                  type: string
+                time:
+                  type: number
+                levels:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        px:
+                          type: string
+                        sz:
+                          type: string
+                        "n":
+                          type: number
+                      required:
+                        - px
+                        - sz
+                        - "n"
+                      additionalProperties: false
+                  description: "[bids, asks]"
+              required:
+                - coin
+                - time
+                - levels
+              additionalProperties: true
+            "no":
+              type: object
+              properties:
+                coin:
+                  type: string
+                time:
+                  type: number
+                levels:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        px:
+                          type: string
+                        sz:
+                          type: string
+                        "n":
+                          type: number
+                      required:
+                        - px
+                        - sz
+                        - "n"
+                      additionalProperties: false
+                  description: "[bids, asks]"
+              required:
+                - coin
+                - time
+                - levels
+              additionalProperties: true
+          required:
+            - "yes"
+            - "no"
+          additionalProperties: false
+      required:
+        - outcome
+        - resolvesAt
+        - books
+      additionalProperties: false
+    Hedge:
+      type: object
+      properties:
+        orderId:
+          type: string
+        userId:
+          type: string
+        symbol:
+          type: string
+        stockToken:
+          type: string
+          pattern: ^0x[0-9a-fA-F]{40}$
+        direction:
+          type: string
+          enum:
+            - buy
+            - sell
+        amountIn:
+          type: string
+          description: USD debited from the bankroll
+        amountOut:
+          type: string
+          description: stock shares
+        entryPx:
+          type: string
+          description: decimal number as a string (exact, from Postgres numeric)
+        exitPx:
+          type: string
+          nullable: true
+          description: decimal number as a string (exact, from Postgres numeric)
+        valueUsd:
+          type: string
+          nullable: true
+          description: decimal number as a string (exact, from Postgres numeric)
+        priceSource:
+          type: string
+        priceAt:
+          type: string
+          format: date-time
+        simulated:
+          type: boolean
+        status:
+          type: string
+          enum:
+            - open
+            - closed
+        uniswapTx:
+          type: string
+          nullable: true
+        chainlinkRound:
+          type: string
+          nullable: true
+        escrowTx:
+          type: string
+          nullable: true
+        payTx:
+          type: string
+          nullable: true
+        escrowTopUpTx:
+          type: string
+          nullable: true
+        receiptId:
+          type: string
+          nullable: true
+        receiptTx:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - orderId
+        - userId
+        - symbol
+        - stockToken
+        - direction
+        - amountIn
+        - amountOut
+        - entryPx
+        - exitPx
+        - valueUsd
+        - priceSource
+        - priceAt
+        - simulated
+        - status
+        - uniswapTx
+        - chainlinkRound
+        - escrowTx
+        - payTx
+        - escrowTopUpTx
+        - receiptId
+        - receiptTx
+        - createdAt
+        - closedAt
+      additionalProperties: false
+    ReceiptSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          anyOf:
+            - type: string
+              enum:
+                - bet
+                - zcash-payout
+                - bet+hedge
+            - type: string
+        subjectId:
+          type: string
+          nullable: true
+        payloadHash:
+          type: string
+        visibility:
+          type: string
+          enum:
+            - private
+            - public
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - kind
+        - subjectId
+        - payloadHash
+        - visibility
+        - createdAt
+      additionalProperties: false
+    Verification:
+      type: object
+      properties:
+        receiptId:
+          type: string
+        kind:
+          type: string
+        ok:
+          type: boolean
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              ok:
+                type: boolean
+              detail:
+                type: string
+            required:
+              - name
+              - ok
+            additionalProperties: false
+      required:
+        - receiptId
+        - kind
+        - ok
+        - checks
+      additionalProperties: false
+    Proof:
+      type: object
+      properties:
+        receiptId:
+          type: string
+        kind:
+          type: string
+        payloadHash:
+          type: string
+        provedAt:
+          type: string
+          format: date-time
+        tempo:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              tx:
+                type: string
+              memo:
+                type: string
+              explorer:
+                type: string
+            required:
+              - label
+              - tx
+              - memo
+              - explorer
+            additionalProperties: false
+        solana:
+          type: object
+          properties:
+            settleTx:
+              type: string
+              nullable: true
+            opening:
+              type: object
+              properties:
+                amountUnits:
+                  type: string
+                salt:
+                  type: string
+              required:
+                - amountUnits
+                - salt
+              additionalProperties: false
+              nullable: true
+            attestations:
+              type: array
+              items:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  tx:
+                    type: string
+                  explorer:
+                    type: string
+                  attestation:
+                    type: object
+                    properties:
+                      statement:
+                        type: object
+                        properties: {}
+                        additionalProperties: true
+                    required:
+                      - statement
+                    additionalProperties: true
+                required:
+                  - label
+                  - tx
+                  - explorer
+                  - attestation
+                additionalProperties: false
+          required:
+            - settleTx
+            - opening
+            - attestations
+          additionalProperties: false
+          nullable: true
+        zcash:
+          type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - zcash-ovk-view+frost
+            receiptId:
+              type: string
+            orderTxid:
+              type: string
+            payoutTxid:
+              type: string
+            view:
+              type: object
+              properties: {}
+              additionalProperties: true
+              nullable: true
+            instruction:
+              type: object
+              properties: {}
+              additionalProperties: true
+            frost:
+              type: object
+              properties:
+                signature:
+                  type: string
+                signers:
+                  type: string
+                  nullable: true
+                verifyingKey:
+                  type: string
+                threshold:
+                  type: string
+                valid:
+                  type: boolean
+              required:
+                - signature
+                - signers
+                - verifyingKey
+                - threshold
+                - valid
+              additionalProperties: false
+            matches:
+              type: boolean
+          required:
+            - kind
+            - receiptId
+            - orderTxid
+            - payoutTxid
+            - view
+            - instruction
+            - frost
+            - matches
+          additionalProperties: false
+          nullable: true
+      required:
+        - receiptId
+        - kind
+        - payloadHash
+        - provedAt
+        - tempo
+        - solana
+        - zcash
+      additionalProperties: false
+    WsEvent:
+      anyOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - hello
+            userId:
+              type: string
+          required:
+            - type
+            - userId
+          additionalProperties: false
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - order
+            userId:
+              type: string
+            orderId:
+              type: string
+            step:
+              type: string
+            status:
+              type: string
+          required:
+            - type
+            - userId
+            - orderId
+            - step
+            - status
+          additionalProperties: false
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - settlement
+            userId:
+              type: string
+            orderId:
+              type: string
+            outcome:
+              type: string
+            payoutUsd:
+              type: number
+          required:
+            - type
+            - userId
+            - orderId
+            - outcome
+            - payoutUsd
+          additionalProperties: false
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - deposit
+            userId:
+              type: string
+            depositId:
+              type: string
+            sourceChain:
+              type: string
+            status:
+              type: string
+            amountUsd:
+              type: number
+          required:
+            - type
+            - userId
+            - depositId
+            - sourceChain
+            - status
+            - amountUsd
+          additionalProperties: false
+      description: Messages pushed on GET /ws (session cookie). Closes 4401 when unauthenticated.
+paths:
+  /health:
+    get:
+      tags:
+        - meta
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    enum:
+                      - true
+                required:
+                  - ok
+                additionalProperties: false
+  /api/auth/passkey/register/options:
+    post:
+      tags:
+        - auth
+      responses:
+        "200":
+          description: PublicKeyCredential{Creation,Request}OptionsJSON — pass to @simplewebauthn/browser
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  challenge:
+                    type: string
+                required:
+                  - challenge
+                additionalProperties: true
+                description: PublicKeyCredential{Creation,Request}OptionsJSON — pass to @simplewebauthn/browser
+  /api/auth/passkey/register/verify:
+    post:
+      tags:
+        - auth
+      description: Verifies the attestation, creates the user, sets the session cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                rawId:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - public-key
+                response:
+                  type: object
+                  properties: {}
+                  additionalProperties: true
+              required:
+                - id
+                - rawId
+                - type
+                - response
+              additionalProperties: true
+              description: RegistrationResponseJSON / AuthenticationResponseJSON from @simplewebauthn/browser
+        description: RegistrationResponseJSON / AuthenticationResponseJSON from @simplewebauthn/browser
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  tempoAddress:
+                    type: string
+                    pattern: ^0x[0-9a-fA-F]{40}$
+                required:
+                  - userId
+                  - tempoAddress
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/passkey/login/options:
+    post:
+      tags:
+        - auth
+      responses:
+        "200":
+          description: PublicKeyCredential{Creation,Request}OptionsJSON — pass to @simplewebauthn/browser
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  challenge:
+                    type: string
+                required:
+                  - challenge
+                additionalProperties: true
+                description: PublicKeyCredential{Creation,Request}OptionsJSON — pass to @simplewebauthn/browser
+  /api/auth/passkey/login/verify:
+    post:
+      tags:
+        - auth
+      description: Verifies the assertion and sets the session cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                rawId:
+                  type: string
+                type:
+                  type: string
+                  enum:
+                    - public-key
+                response:
+                  type: object
+                  properties: {}
+                  additionalProperties: true
+              required:
+                - id
+                - rawId
+                - type
+                - response
+              additionalProperties: true
+              description: RegistrationResponseJSON / AuthenticationResponseJSON from @simplewebauthn/browser
+        description: RegistrationResponseJSON / AuthenticationResponseJSON from @simplewebauthn/browser
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  tempoAddress:
+                    type: string
+                    pattern: ^0x[0-9a-fA-F]{40}$
+                required:
+                  - userId
+                  - tempoAddress
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/me:
+    get:
+      tags:
+        - auth
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  tempoAddress:
+                    type: string
+                    pattern: ^0x[0-9a-fA-F]{40}$
+                  region:
+                    type: string
+                    nullable: true
+                required:
+                  - userId
+                  - tempoAddress
+                  - region
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/auth/region:
+    put:
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                region:
+                  type: string
+                  description: ISO 3166-1 alpha-2
+              required:
+                - region
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  region:
+                    type: string
+                    nullable: true
+                  hedge:
+                    anyOf:
+                      - type: object
+                        properties:
+                          eligible:
+                            type: boolean
+                            enum:
+                              - true
+                        required:
+                          - eligible
+                        additionalProperties: false
+                      - type: object
+                        properties:
+                          eligible:
+                            type: boolean
+                            enum:
+                              - false
+                          reason:
+                            type: string
+                        required:
+                          - eligible
+                          - reason
+                        additionalProperties: false
+                required:
+                  - region
+                  - hedge
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/tempo/sponsor:
+    post:
+      tags:
+        - tempo
+      description: "Fee-payer relay: co-signs txs sent by tyr users. Use as the relay transport of withRelay()."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: JSON-RPC request/response (Tempo fee-payer relay)
+        description: JSON-RPC request/response (Tempo fee-payer relay)
+      responses:
+        "200":
+          description: JSON-RPC request/response (Tempo fee-payer relay)
+          content:
+            application/json:
+              schema:
+                description: JSON-RPC request/response (Tempo fee-payer relay)
+        4XX:
+          description: JSON-RPC request/response (Tempo fee-payer relay)
+          content:
+            application/json:
+              schema:
+                description: JSON-RPC request/response (Tempo fee-payer relay)
+        5XX:
+          description: JSON-RPC request/response (Tempo fee-payer relay)
+          content:
+            application/json:
+              schema:
+                description: JSON-RPC request/response (Tempo fee-payer relay)
+  /api/limits/prepare:
+    post:
+      tags:
+        - limits
+      description: Mints a tyr-held access key; the passkey then authorizes it on-chain with this spend limit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 10000
+                period:
+                  type: string
+                  enum:
+                    - day
+                    - week
+              required:
+                - amountUsd
+                - period
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Arguments for viem/tempo Actions.accessKey.authorize, signed by the passkey
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessKey:
+                    type: object
+                    properties:
+                      accessKeyAddress:
+                        type: string
+                        pattern: ^0x[0-9a-fA-F]{40}$
+                      keyType:
+                        type: string
+                        enum:
+                          - p256
+                          - secp256k1
+                    required:
+                      - accessKeyAddress
+                      - keyType
+                    additionalProperties: false
+                  expiry:
+                    type: integer
+                    description: unix seconds
+                  limits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        token:
+                          type: string
+                          pattern: ^0x[0-9a-fA-F]{40}$
+                        limit:
+                          type: string
+                          description: token base units (6 decimals)
+                        period:
+                          type: integer
+                          description: seconds
+                      required:
+                        - token
+                        - limit
+                        - period
+                      additionalProperties: false
+                  limitId:
+                    type: string
+                required:
+                  - accessKey
+                  - expiry
+                  - limits
+                  - limitId
+                additionalProperties: false
+                description: Arguments for viem/tempo Actions.accessKey.authorize, signed by the passkey
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/limits/confirm:
+    put:
+      tags:
+        - limits
+      description: Records the on-chain authorization after checking it on Moderato.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limitId:
+                  type: string
+                txHash:
+                  type: string
+                  pattern: ^0x[0-9a-fA-F]{64}$
+              required:
+                - limitId
+                - txHash
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  limitId:
+                    type: string
+                  remainingUsd:
+                    type: number
+                required:
+                  - limitId
+                  - remainingUsd
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/limits:
+    get:
+      tags:
+        - limits
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  limit:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      period:
+                        type: string
+                      amountUsd:
+                        type: number
+                      remainingUsd:
+                        type: number
+                      periodEnd:
+                        type: number
+                        nullable: true
+                      authorizedTx:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - period
+                      - amountUsd
+                      - remainingUsd
+                      - periodEnd
+                      - authorizedTx
+                    additionalProperties: false
+                    nullable: true
+                required:
+                  - limit
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/markets:
+    get:
+      tags:
+        - markets
+      description: "Featured outcome markets: unresolved, two-sided YES book right now."
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Market"
+                required:
+                  - markets
+                additionalProperties: false
+  /api/markets/{id}:
+    get:
+      tags:
+        - markets
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+          in: path
+          name: id
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketDetail"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/admin/revenue:
+    get:
+      tags:
+        - admin
+      description: "Builder fee earned: HL referral state (live) and tyr ledger (live vs paper)."
+      security:
+        - admin: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  builder:
+                    type: string
+                  feeTenthsBps:
+                    type: number
+                  hl:
+                    type: object
+                    properties:
+                      builderRewardsUsd:
+                        type: number
+                    required:
+                      - builderRewardsUsd
+                    additionalProperties: false
+                  ledger:
+                    type: object
+                    properties:
+                      live:
+                        type: object
+                        properties:
+                          orders:
+                            type: number
+                          feesUsd:
+                            type: number
+                        required:
+                          - orders
+                          - feesUsd
+                        additionalProperties: false
+                      simulated:
+                        type: object
+                        properties:
+                          orders:
+                            type: number
+                          feesUsd:
+                            type: number
+                        required:
+                          - orders
+                          - feesUsd
+                        additionalProperties: false
+                    required:
+                      - live
+                      - simulated
+                    additionalProperties: false
+                required:
+                  - builder
+                  - feeTenthsBps
+                  - hl
+                  - ledger
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/bets:
+    post:
+      tags:
+        - bets
+      description: Place a bet (Flow A). 402 = loss limit exceeded on-chain, 409 = insufficient confidential balance. Replaying an idempotencyKey returns the same order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outcome:
+                  type: integer
+                  minimum: 0
+                side:
+                  type: string
+                  enum:
+                    - "yes"
+                    - "no"
+                stakeUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 1000
+                idempotencyKey:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+                maxPrice:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  exclusiveMaximum: true
+                  maximum: 1
+              required:
+                - outcome
+                - side
+                - stakeUsd
+                - idempotencyKey
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags:
+        - bets
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+                required:
+                  - bets
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/bets/{id}:
+    get:
+      tags:
+        - bets
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/sessions:
+    post:
+      tags:
+        - agent sessions
+      description: Register an agent key with a spend cap; the passkey then authorizes it on-chain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentAddress:
+                  type: string
+                  pattern: ^0x[0-9a-fA-F]{40}$
+                capUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 10000
+                period:
+                  type: string
+                  enum:
+                    - day
+                    - week
+                  default: day
+                name:
+                  type: string
+                  maxLength: 64
+                expiresInDays:
+                  type: integer
+                  minimum: 1
+                  maximum: 90
+                  default: 30
+              required:
+                - agentAddress
+                - capUsd
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "201":
+          description: Arguments for viem/tempo Actions.accessKey.authorize, signed by the passkey
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessKey:
+                    type: object
+                    properties:
+                      accessKeyAddress:
+                        type: string
+                        pattern: ^0x[0-9a-fA-F]{40}$
+                      keyType:
+                        type: string
+                        enum:
+                          - p256
+                          - secp256k1
+                    required:
+                      - accessKeyAddress
+                      - keyType
+                    additionalProperties: false
+                  expiry:
+                    type: integer
+                    description: unix seconds
+                  limits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        token:
+                          type: string
+                          pattern: ^0x[0-9a-fA-F]{40}$
+                        limit:
+                          type: string
+                          description: token base units (6 decimals)
+                        period:
+                          type: integer
+                          description: seconds
+                      required:
+                        - token
+                        - limit
+                        - period
+                      additionalProperties: false
+                  sessionId:
+                    type: string
+                required:
+                  - accessKey
+                  - expiry
+                  - limits
+                  - sessionId
+                additionalProperties: false
+                description: Arguments for viem/tempo Actions.accessKey.authorize, signed by the passkey
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags:
+        - agent sessions
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                          nullable: true
+                        agentAddress:
+                          type: string
+                        capUsd:
+                          type: number
+                        spentUsd:
+                          type: number
+                        period:
+                          type: string
+                        expiresAt:
+                          type: string
+                          format: date-time
+                        revokedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        authorizedTx:
+                          type: string
+                          nullable: true
+                        active:
+                          type: boolean
+                        remainingUsd:
+                          type: number
+                          nullable: true
+                      required:
+                        - id
+                        - name
+                        - agentAddress
+                        - capUsd
+                        - spentUsd
+                        - period
+                        - expiresAt
+                        - revokedAt
+                        - authorizedTx
+                        - active
+                        - remainingUsd
+                      additionalProperties: false
+                required:
+                  - sessions
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/sessions/{id}/confirm:
+    put:
+      tags:
+        - agent sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                txHash:
+                  type: string
+                  pattern: ^0x[0-9a-fA-F]{64}$
+              required:
+                - txHash
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  remainingUsd:
+                    type: number
+                required:
+                  - sessionId
+                  - remainingUsd
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/sessions/{id}:
+    delete:
+      tags:
+        - agent sessions
+      description: Stops tyr serving the agent; revoke the on-chain key with the passkey.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  revoked:
+                    type: boolean
+                    enum:
+                      - true
+                required:
+                  - sessionId
+                  - revoked
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/me:
+    get:
+      tags:
+        - agent
+      security:
+        - agent: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                    nullable: true
+                  agentAddress:
+                    type: string
+                  capUsd:
+                    type: number
+                  spentUsd:
+                    type: number
+                  period:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  revokedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  authorizedTx:
+                    type: string
+                    nullable: true
+                  active:
+                    type: boolean
+                  owner:
+                    type: string
+                    pattern: ^0x[0-9a-fA-F]{40}$
+                  remainingUsd:
+                    type: number
+                required:
+                  - id
+                  - name
+                  - agentAddress
+                  - capUsd
+                  - spentUsd
+                  - period
+                  - expiresAt
+                  - revokedAt
+                  - authorizedTx
+                  - active
+                  - owner
+                  - remainingUsd
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/markets:
+    get:
+      tags:
+        - agent
+      security:
+        - agent: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Market"
+                  priceUsd:
+                    type: object
+                    properties:
+                      data:
+                        type: number
+                    required:
+                      - data
+                    additionalProperties: false
+                required:
+                  - markets
+                  - priceUsd
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/markets/{id}/data:
+    get:
+      tags:
+        - agent
+      description: "Paid ($0.01): full two-sided books for one outcome market."
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+          in: path
+          name: id
+          required: true
+      security:
+        - agent: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  market:
+                    $ref: "#/components/schemas/MarketDetail"
+                  books:
+                    type: object
+                    properties:
+                      "yes":
+                        type: object
+                        properties:
+                          coin:
+                            type: string
+                          time:
+                            type: number
+                          levels:
+                            type: array
+                            items:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  px:
+                                    type: string
+                                  sz:
+                                    type: string
+                                  "n":
+                                    type: number
+                                required:
+                                  - px
+                                  - sz
+                                  - "n"
+                                additionalProperties: false
+                            description: "[bids, asks]"
+                        required:
+                          - coin
+                          - time
+                          - levels
+                        additionalProperties: true
+                      "no":
+                        type: object
+                        properties:
+                          coin:
+                            type: string
+                          time:
+                            type: number
+                          levels:
+                            type: array
+                            items:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  px:
+                                    type: string
+                                  sz:
+                                    type: string
+                                  "n":
+                                    type: number
+                                required:
+                                  - px
+                                  - sz
+                                  - "n"
+                                additionalProperties: false
+                            description: "[bids, asks]"
+                        required:
+                          - coin
+                          - time
+                          - levels
+                        additionalProperties: true
+                    required:
+                      - "yes"
+                      - "no"
+                    additionalProperties: false
+                  paymentTx:
+                    type: string
+                required:
+                  - market
+                  - books
+                  - paymentTx
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: "HTTP 402 MPP challenge (WWW-Authenticate: Payment …); pay on Tempo Moderato and retry"
+          content:
+            application/json:
+              schema:
+                description: "HTTP 402 MPP challenge (WWW-Authenticate: Payment …); pay on Tempo Moderato and retry"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/evidence/{id}:
+    get:
+      tags:
+        - agent
+      description: "Paid ($0.01): on-chain evidence trail for one of this agent's bets."
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - agent: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+                  links:
+                    type: object
+                    properties:
+                      tempoStake:
+                        type: string
+                        nullable: true
+                      tempoPayout:
+                        type: string
+                        nullable: true
+                    required:
+                      - tempoStake
+                      - tempoPayout
+                    additionalProperties: false
+                  paymentTx:
+                    type: string
+                required:
+                  - order
+                  - links
+                  - paymentTx
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: "HTTP 402 MPP challenge (WWW-Authenticate: Payment …); pay on Tempo Moderato and retry"
+          content:
+            application/json:
+              schema:
+                description: "HTTP 402 MPP challenge (WWW-Authenticate: Payment …); pay on Tempo Moderato and retry"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/bets:
+    post:
+      tags:
+        - agent
+      description: "Paid: the MPP charge (= stake) is capped on-chain by the session, then Flow A runs. Replaying an idempotencyKey returns the same order (200) without a new charge."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outcome:
+                  type: integer
+                  minimum: 0
+                side:
+                  type: string
+                  enum:
+                    - "yes"
+                    - "no"
+                stakeUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 1000
+                idempotencyKey:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+                maxPrice:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  exclusiveMaximum: true
+                  maximum: 1
+              required:
+                - outcome
+                - side
+                - stakeUsd
+                - idempotencyKey
+              additionalProperties: false
+      security:
+        - agent: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: "HTTP 402 MPP challenge (WWW-Authenticate: Payment …); pay on Tempo Moderato and retry"
+          content:
+            application/json:
+              schema:
+                description: "HTTP 402 MPP challenge (WWW-Authenticate: Payment …); pay on Tempo Moderato and retry"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/agent/bets/{id}:
+    get:
+      tags:
+        - agent
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - agent: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/balance:
+    get:
+      tags:
+        - balance
+      description: Confidential tyrUSD balance, decrypted server-side for the owner only.
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  availableUsd:
+                    type: number
+                  token:
+                    type: string
+                    enum:
+                      - tyrUSD
+                required:
+                  - availableUsd
+                  - token
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/deposits/addresses:
+    get:
+      tags:
+        - deposits
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  evm:
+                    type: object
+                    properties:
+                      address:
+                        type: string
+                        pattern: ^0x[0-9a-fA-F]{40}$
+                      chains:
+                        type: array
+                        items:
+                          type: string
+                      assets:
+                        type: object
+                        additionalProperties:
+                          type: array
+                          items:
+                            type: string
+                    required:
+                      - address
+                      - chains
+                      - assets
+                    additionalProperties: false
+                  solana:
+                    type: object
+                    properties:
+                      owner:
+                        type: string
+                      usdcAta:
+                        type: string
+                      usdcMint:
+                        type: string
+                    required:
+                      - owner
+                      - usdcAta
+                      - usdcMint
+                    additionalProperties: false
+                  tempo:
+                    type: object
+                    properties:
+                      to:
+                        type: string
+                        pattern: ^0x[0-9a-fA-F]{40}$
+                      memo:
+                        type: string
+                        pattern: ^0x[0-9a-fA-F]{64}$
+                      token:
+                        type: string
+                    required:
+                      - to
+                      - memo
+                      - token
+                    additionalProperties: false
+                required:
+                  - evm
+                  - solana
+                  - tempo
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/deposits:
+    get:
+      tags:
+        - deposits
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deposits:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Deposit"
+                required:
+                  - deposits
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/deposits/claim:
+    post:
+      tags:
+        - deposits
+      description: Claim an EVM deposit by tx hash (required for ETH). Credits inline when possible; the funding worker retries anything left uncredited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chain:
+                  type: string
+                  enum:
+                    - sepolia
+                    - baseSepolia
+                    - arbSepolia
+                    - robinhood
+                txHash:
+                  type: string
+                  pattern: ^0x[0-9a-fA-F]{64}$
+              required:
+                - chain
+                - txHash
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deposits:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Deposit"
+                required:
+                  - deposits
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/zcash/request:
+    post:
+      tags:
+        - zcash
+      description: ZIP-321 payment request for a shielded bet (Flow B). No account needed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                outcome:
+                  type: integer
+                  minimum: 0
+                side:
+                  type: string
+                  enum:
+                    - "yes"
+                    - "no"
+                stakeUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 10000
+                returnUA:
+                  type: string
+                  pattern: ^u(1|test1|regtest1)[0-9a-z]+$
+                  maxLength: 255
+              required:
+                - outcome
+                - side
+                - stakeUsd
+                - returnUA
+              additionalProperties: false
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uri:
+                    type: string
+                    description: ZIP-321 payment URI (render as QR)
+                  to:
+                    type: string
+                  zat:
+                    type: string
+                  memo:
+                    type: string
+                  zecUsd:
+                    type: number
+                required:
+                  - uri
+                  - to
+                  - zat
+                  - memo
+                  - zecUsd
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/zcash/orders/{txid}:
+    get:
+      tags:
+        - zcash
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: txid
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  txid:
+                    type: string
+                  status:
+                    type: string
+                  marketId:
+                    type: string
+                  side:
+                    type: string
+                    enum:
+                      - "yes"
+                      - "no"
+                  size:
+                    type: string
+                    description: decimal number as a string (exact, from Postgres numeric)
+                  zecUsd:
+                    type: string
+                    nullable: true
+                    description: decimal number as a string (exact, from Postgres numeric)
+                  payoutZat:
+                    type: string
+                    nullable: true
+                  payoutTxid:
+                    type: string
+                    nullable: true
+                  error:
+                    type: string
+                    nullable: true
+                  orderId:
+                    type: string
+                    nullable: true
+                required:
+                  - id
+                  - txid
+                  - status
+                  - marketId
+                  - side
+                  - size
+                  - zecUsd
+                  - payoutZat
+                  - payoutTxid
+                  - error
+                  - orderId
+                additionalProperties: false
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/zcash/orders/{txid}/disclosure:
+    get:
+      tags:
+        - zcash
+      description: OVK view of the payout + FROST 2-of-3 check (the txid is the capability).
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: txid
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kind:
+                    type: string
+                    enum:
+                      - zcash-ovk-view+frost
+                  receiptId:
+                    type: string
+                  orderTxid:
+                    type: string
+                  payoutTxid:
+                    type: string
+                  view:
+                    type: object
+                    properties: {}
+                    additionalProperties: true
+                    nullable: true
+                  instruction:
+                    type: object
+                    properties: {}
+                    additionalProperties: true
+                  frost:
+                    type: object
+                    properties:
+                      signature:
+                        type: string
+                      signers:
+                        type: string
+                        nullable: true
+                      verifyingKey:
+                        type: string
+                      threshold:
+                        type: string
+                      valid:
+                        type: boolean
+                    required:
+                      - signature
+                      - signers
+                      - verifyingKey
+                      - threshold
+                      - valid
+                    additionalProperties: false
+                  matches:
+                    type: boolean
+                required:
+                  - kind
+                  - receiptId
+                  - orderTxid
+                  - payoutTxid
+                  - view
+                  - instruction
+                  - frost
+                  - matches
+                additionalProperties: false
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/zcash/orders/{txid}/receipt:
+    get:
+      tags:
+        - zcash
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: txid
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  payloadHash:
+                    type: string
+                  payload: {}
+                  verification:
+                    $ref: "#/components/schemas/Verification"
+                required:
+                  - id
+                  - payloadHash
+                  - verification
+                additionalProperties: false
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/hedge/markets/{marketId}:
+    get:
+      tags:
+        - hedge
+      description: Whether a hedge is offered for this market (drives the hedge card).
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+          in: path
+          name: marketId
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - type: object
+                    properties:
+                      offered:
+                        type: boolean
+                        enum:
+                          - true
+                      stock:
+                        type: string
+                      token:
+                        type: string
+                        pattern: ^0x[0-9a-fA-F]{40}$
+                      rule:
+                        type: string
+                      yesDirection:
+                        type: string
+                        enum:
+                          - buy
+                          - sell
+                      simulated:
+                        type: boolean
+                        enum:
+                          - true
+                    required:
+                      - offered
+                      - stock
+                      - token
+                      - rule
+                      - yesDirection
+                      - simulated
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      offered:
+                        type: boolean
+                        enum:
+                          - false
+                    required:
+                      - offered
+                    additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/hedge/{orderId}/quote:
+    get:
+      tags:
+        - hedge
+      description: Simulated swap quote for an open bet; amount defaults to the stake.
+      parameters:
+        - schema:
+            type: number
+            exclusiveMinimum: true
+            minimum: 0
+          in: query
+          name: amountUsd
+          required: false
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: orderId
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  simulated:
+                    type: boolean
+                    enum:
+                      - true
+                  orderId:
+                    type: string
+                  stock:
+                    type: string
+                  token:
+                    type: string
+                    pattern: ^0x[0-9a-fA-F]{40}$
+                  direction:
+                    type: string
+                    enum:
+                      - buy
+                      - sell
+                  rule:
+                    type: string
+                  amountInUsd:
+                    type: number
+                  maxAmountInUsd:
+                    type: number
+                  entryPx:
+                    type: number
+                  shares:
+                    type: number
+                  priceSource:
+                    type: string
+                  priceAt:
+                    type: string
+                    format: date-time
+                  feeBps:
+                    type: number
+                required:
+                  - simulated
+                  - orderId
+                  - stock
+                  - token
+                  - direction
+                  - rule
+                  - amountInUsd
+                  - maxAmountInUsd
+                  - entryPx
+                  - shares
+                  - priceSource
+                  - priceAt
+                  - feeBps
+                additionalProperties: false
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/hedge:
+    post:
+      tags:
+        - hedge
+      description: "Open a hedge on an open bet: real confidential debit, simulated swap."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                amountUsd:
+                  type: number
+                  exclusiveMinimum: true
+                  minimum: 0
+                  maximum: 1000
+              required:
+                - orderId
+              additionalProperties: false
+      security:
+        - session: []
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hedge"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags:
+        - hedge
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hedges:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        orderId:
+                          type: string
+                        userId:
+                          type: string
+                        symbol:
+                          type: string
+                        stockToken:
+                          type: string
+                          pattern: ^0x[0-9a-fA-F]{40}$
+                        direction:
+                          type: string
+                          enum:
+                            - buy
+                            - sell
+                        amountIn:
+                          type: string
+                          description: USD debited from the bankroll
+                        amountOut:
+                          type: string
+                          description: stock shares
+                        entryPx:
+                          type: string
+                          description: decimal number as a string (exact, from Postgres numeric)
+                        exitPx:
+                          type: string
+                          nullable: true
+                          description: decimal number as a string (exact, from Postgres numeric)
+                        valueUsd:
+                          type: string
+                          nullable: true
+                          description: decimal number as a string (exact, from Postgres numeric)
+                        priceSource:
+                          type: string
+                        priceAt:
+                          type: string
+                          format: date-time
+                        simulated:
+                          type: boolean
+                        status:
+                          type: string
+                          enum:
+                            - open
+                            - closed
+                        uniswapTx:
+                          type: string
+                          nullable: true
+                        chainlinkRound:
+                          type: string
+                          nullable: true
+                        escrowTx:
+                          type: string
+                          nullable: true
+                        payTx:
+                          type: string
+                          nullable: true
+                        escrowTopUpTx:
+                          type: string
+                          nullable: true
+                        receiptId:
+                          type: string
+                          nullable: true
+                        receiptTx:
+                          type: string
+                          nullable: true
+                        createdAt:
+                          type: string
+                          format: date-time
+                        closedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        receipt:
+                          type: object
+                          properties:
+                            kind:
+                              type: string
+                              enum:
+                                - bet+hedge
+                            orderId:
+                              type: string
+                            bet:
+                              type: object
+                              properties: {}
+                              additionalProperties: true
+                            hedge:
+                              type: object
+                              properties: {}
+                              additionalProperties: true
+                            netPnlUsd:
+                              type: number
+                            id:
+                              type: string
+                              nullable: true
+                            payloadHash:
+                              type: string
+                            tempoMemoTx:
+                              type: string
+                              nullable: true
+                          required:
+                            - kind
+                            - orderId
+                            - bet
+                            - hedge
+                            - netPnlUsd
+                            - id
+                            - tempoMemoTx
+                          additionalProperties: false
+                          description: combined bet payout + hedge P&L, once the hedge is closed
+                      required:
+                        - orderId
+                        - userId
+                        - symbol
+                        - stockToken
+                        - direction
+                        - amountIn
+                        - amountOut
+                        - entryPx
+                        - exitPx
+                        - valueUsd
+                        - priceSource
+                        - priceAt
+                        - simulated
+                        - status
+                        - uniswapTx
+                        - chainlinkRound
+                        - escrowTx
+                        - payTx
+                        - escrowTopUpTx
+                        - receiptId
+                        - receiptTx
+                        - createdAt
+                        - closedAt
+                      additionalProperties: false
+                required:
+                  - hedges
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/hedge/{orderId}:
+    get:
+      tags:
+        - hedge
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: orderId
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: string
+                  userId:
+                    type: string
+                  symbol:
+                    type: string
+                  stockToken:
+                    type: string
+                    pattern: ^0x[0-9a-fA-F]{40}$
+                  direction:
+                    type: string
+                    enum:
+                      - buy
+                      - sell
+                  amountIn:
+                    type: string
+                    description: USD debited from the bankroll
+                  amountOut:
+                    type: string
+                    description: stock shares
+                  entryPx:
+                    type: string
+                    description: decimal number as a string (exact, from Postgres numeric)
+                  exitPx:
+                    type: string
+                    nullable: true
+                    description: decimal number as a string (exact, from Postgres numeric)
+                  valueUsd:
+                    type: string
+                    nullable: true
+                    description: decimal number as a string (exact, from Postgres numeric)
+                  priceSource:
+                    type: string
+                  priceAt:
+                    type: string
+                    format: date-time
+                  simulated:
+                    type: boolean
+                  status:
+                    type: string
+                    enum:
+                      - open
+                      - closed
+                  uniswapTx:
+                    type: string
+                    nullable: true
+                  chainlinkRound:
+                    type: string
+                    nullable: true
+                  escrowTx:
+                    type: string
+                    nullable: true
+                  payTx:
+                    type: string
+                    nullable: true
+                  escrowTopUpTx:
+                    type: string
+                    nullable: true
+                  receiptId:
+                    type: string
+                    nullable: true
+                  receiptTx:
+                    type: string
+                    nullable: true
+                  createdAt:
+                    type: string
+                    format: date-time
+                  closedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  receipt:
+                    type: object
+                    properties:
+                      kind:
+                        type: string
+                        enum:
+                          - bet+hedge
+                      orderId:
+                        type: string
+                      bet:
+                        type: object
+                        properties: {}
+                        additionalProperties: true
+                      hedge:
+                        type: object
+                        properties: {}
+                        additionalProperties: true
+                      netPnlUsd:
+                        type: number
+                      id:
+                        type: string
+                        nullable: true
+                      payloadHash:
+                        type: string
+                      tempoMemoTx:
+                        type: string
+                        nullable: true
+                    required:
+                      - kind
+                      - orderId
+                      - bet
+                      - hedge
+                      - netPnlUsd
+                      - id
+                      - tempoMemoTx
+                    additionalProperties: false
+                    description: combined bet payout + hedge P&L, once the hedge is closed
+                required:
+                  - orderId
+                  - userId
+                  - symbol
+                  - stockToken
+                  - direction
+                  - amountIn
+                  - amountOut
+                  - entryPx
+                  - exitPx
+                  - valueUsd
+                  - priceSource
+                  - priceAt
+                  - simulated
+                  - status
+                  - uniswapTx
+                  - chainlinkRound
+                  - escrowTx
+                  - payTx
+                  - escrowTopUpTx
+                  - receiptId
+                  - receiptTx
+                  - createdAt
+                  - closedAt
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/receipts:
+    get:
+      tags:
+        - receipts
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receipts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReceiptSummary"
+                required:
+                  - receipts
+                additionalProperties: false
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/receipts/{id}:
+    get:
+      tags:
+        - receipts
+      description: Receipt payload + hash. Owner, or anyone if the receipt is public; 404 otherwise.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - {}
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  kind:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - bet
+                          - zcash-payout
+                          - bet+hedge
+                      - type: string
+                  subjectId:
+                    type: string
+                    nullable: true
+                  payloadHash:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - public
+                  createdAt:
+                    type: string
+                    format: date-time
+                  payload: {}
+                required:
+                  - id
+                  - kind
+                  - subjectId
+                  - payloadHash
+                  - visibility
+                  - createdAt
+                additionalProperties: false
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/receipts/{id}/proof:
+    get:
+      tags:
+        - receipts
+      description: "Prove bundle: Tempo tx + memo, Solana commitment opening + auditor attestation, Zcash OVK view + FROST. Owner, or anyone if the receipt is public; 404 otherwise."
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - {}
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proof"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/receipts/{id}/verify:
+    get:
+      tags:
+        - receipts
+      description: Re-checks the receipt against the chains (not the DB). Owner, or anyone if the receipt is public; 404 otherwise.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - {}
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Verification"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/receipts/{id}/visibility:
+    put:
+      tags:
+        - receipts
+      description: Publish (proves first, so the public page serves the attested bundle) or hide.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                visibility:
+                  type: string
+                  enum:
+                    - public
+                    - private
+              required:
+                - visibility
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: id
+          required: true
+      security:
+        - session: []
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceiptSummary"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

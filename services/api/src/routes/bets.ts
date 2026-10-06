@@ -7,70 +7,97 @@ import {
   fromUnits,
   placeBet,
 } from '@tyr/pipeline';
-import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { requireUser } from './session.js';
-
-const Bet = z.object({
-  outcome: z.number().int().nonnegative(),
-  side: z.enum(['yes', 'no']),
-  stakeUsd: z.number().positive().max(1_000),
-  idempotencyKey: z.string().min(8).max(128),
-  maxPrice: z.number().gt(0).lt(1).optional(),
-});
+import type { TyrPlugin } from '../contract.js';
+import { Balance, BetInput, IdParams, Order, errors } from '../schemas.js';
+import { authUser, userOf } from './session.js';
 
 const STATUS = { market: 400, size: 400, balance: 409, limit: 402 } as const;
-
-const view = (o: Record<string, unknown>) =>
-  JSON.parse(JSON.stringify(o, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
+const route = { preValidation: authUser };
+const tags = ['bets'];
+const security = [{ session: [] }];
 
 export const betRoutes =
-  (exec: Executor): FastifyPluginAsync =>
+  (exec: Executor): TyrPlugin =>
   async (app) => {
-    app.post('/', async (req, reply) => {
-      const user = await requireUser(req, reply);
-      if (!user || reply.sent) return;
-      const body = Bet.safeParse(req.body);
-      if (!body.success) return reply.code(400).send({ error: body.error.flatten() });
-      try {
-        const order = await placeBet(app.db, exec, { userId: user.id, ...body.data });
-        return reply.code(201).send(view(order));
-      } catch (err) {
-        if (err instanceof BetRejectedError)
-          return reply.code(STATUS[err.code]).send({ error: err.message, code: err.code });
-        throw err;
-      }
-    });
+    app.post(
+      '/',
+      {
+        ...route,
+        schema: {
+          tags,
+          security,
+          description:
+            'Place a bet (Flow A). 402 = loss limit exceeded on-chain, 409 = insufficient ' +
+            'confidential balance. Replaying an idempotencyKey returns the same order.',
+          body: BetInput,
+          response: { 201: Order, ...errors(400, 401, 402, 409) },
+        },
+      },
+      async (req, reply) => {
+        try {
+          const order = await placeBet(app.db, exec, { userId: userOf(req).id, ...req.body });
+          return reply.code(201).send(order);
+        } catch (err) {
+          if (err instanceof BetRejectedError)
+            return reply.code(STATUS[err.code]).send({ error: err.message, code: err.code });
+          throw err;
+        }
+      },
+    );
 
-    app.get('/', async (req, reply) => {
-      const user = await requireUser(req, reply);
-      if (!user || reply.sent) return;
-      const orders = await app.db.order.findMany({
-        where: { userId: user.id, idempotencyKey: { not: null } },
-        include: { settlement: true },
-        orderBy: { createdAt: 'desc' },
-      });
-      return { bets: orders.map(view) };
-    });
+    app.get(
+      '/',
+      {
+        ...route,
+        schema: {
+          tags,
+          security,
+          response: { 200: z.object({ bets: z.array(Order) }), ...errors(401) },
+        },
+      },
+      async (req) => {
+        const orders = await app.db.order.findMany({
+          where: { userId: userOf(req).id, idempotencyKey: { not: null } },
+          include: { settlement: true },
+          orderBy: { createdAt: 'desc' },
+        });
+        return { bets: orders };
+      },
+    );
 
-    app.get('/:id', async (req, reply) => {
-      const user = await requireUser(req, reply);
-      if (!user || reply.sent) return;
-      const { id } = req.params as { id: string };
-      const order = await app.db.order.findFirst({
-        where: { id, userId: user.id },
-        include: { settlement: true },
-      });
-      if (!order) return reply.code(404).send({ error: 'not found' });
-      return view(order);
-    });
+    app.get(
+      '/:id',
+      {
+        ...route,
+        schema: { tags, security, params: IdParams, response: { 200: Order, ...errors(401, 404) } },
+      },
+      async (req, reply) => {
+        const order = await app.db.order.findFirst({
+          where: { id: req.params.id, userId: userOf(req).id },
+          include: { settlement: true },
+        });
+        if (!order) return reply.code(404).send({ error: 'not found' });
+        return order;
+      },
+    );
   };
 
-export const balanceRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/', async (req, reply) => {
-    const user = await requireUser(req, reply);
-    if (!user || reply.sent) return;
-    const keys = await confidentialAccount(app.db, user.id);
-    return { availableUsd: fromUnits(await availableBalance(keys)), token: 'tyrUSD' };
-  });
+export const balanceRoutes: TyrPlugin = async (app) => {
+  app.get(
+    '/',
+    {
+      ...route,
+      schema: {
+        tags: ['balance'],
+        security,
+        description: 'Confidential tyrUSD balance, decrypted server-side for the owner only.',
+        response: { 200: Balance, ...errors(401) },
+      },
+    },
+    async (req) => {
+      const keys = await confidentialAccount(app.db, userOf(req).id);
+      return { availableUsd: fromUnits(await availableBalance(keys)), token: 'tyrUSD' as const };
+    },
+  );
 };

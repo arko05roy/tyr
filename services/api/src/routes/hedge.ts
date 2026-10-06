@@ -13,9 +13,19 @@ import {
   openHedge,
   quoteHedge,
 } from '@tyr/robinhood';
-import type { FastifyPluginAsync, FastifyReply } from 'fastify';
+import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { requireUser } from './session.js';
+import type { TyrPlugin } from '../contract.js';
+import {
+  Hedge,
+  HedgeOffer,
+  HedgeOpen,
+  HedgeQuote,
+  HedgeQuoteQuery,
+  HedgeWithReceipt,
+  errors,
+} from '../schemas.js';
+import { authUser, userOf } from './session.js';
 
 const STATUS = {
   region: 403,
@@ -27,70 +37,91 @@ const STATUS = {
   price: 503,
 } as const;
 
-const Open = z.object({
-  orderId: z.string().min(1).max(64),
-  amountUsd: z.number().positive().max(1_000).optional(),
-});
-
-const view = (o: unknown) =>
-  JSON.parse(JSON.stringify(o, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
-
 const rejected = (reply: FastifyReply, err: unknown) => {
   if (err instanceof HedgeRejectedError)
     return reply.code(STATUS[err.code]).send({ error: err.message, code: err.code });
   throw err;
 };
 
-export const hedgeRoutes: FastifyPluginAsync = async (app) => {
-  app.get<{ Params: { marketId: string } }>('/markets/:marketId', async (req, reply) => {
-    const user = await requireUser(req, reply);
-    if (!user || reply.sent) return;
-    const elig = hedgeEligibility(user.region);
-    if (!elig.eligible) return reply.code(403).send({ error: elig.reason, code: 'region' });
-    const m = await market(Number(req.params.marketId));
-    if (!m) return reply.code(404).send({ error: 'unknown market' });
-    const rule = hedgeRule(m.outcome);
-    return rule
-      ? {
-          offered: true,
-          stock: rule.stock,
-          token: STOCK_TOKENS[rule.stock],
-          rule: rule.rule,
-          yesDirection: rule.yesDirection,
-          simulated: true,
-        }
-      : { offered: false };
-  });
+const route = { preValidation: authUser };
+const tags = ['hedge'];
+const security = [{ session: [] }];
 
-  app.get<{ Params: { orderId: string }; Querystring: { amountUsd?: string } }>(
-    '/:orderId/quote',
+export const hedgeRoutes: TyrPlugin = async (app) => {
+  app.get(
+    '/markets/:marketId',
+    {
+      ...route,
+      schema: {
+        tags,
+        security,
+        description: 'Whether a hedge is offered for this market (drives the hedge card).',
+        params: z.object({ marketId: z.coerce.number().int().nonnegative() }),
+        response: { 200: HedgeOffer, ...errors(400, 401, 403, 404) },
+      },
+    },
     async (req, reply) => {
-      const user = await requireUser(req, reply);
-      if (!user || reply.sent) return;
-      const amt = req.query.amountUsd !== undefined ? Number(req.query.amountUsd) : undefined;
-      if (amt !== undefined && !Number.isFinite(amt))
-        return reply.code(400).send({ error: 'amountUsd must be a number' });
+      const elig = hedgeEligibility(userOf(req).region);
+      if (!elig.eligible) return reply.code(403).send({ error: elig.reason, code: 'region' });
+      const m = await market(req.params.marketId);
+      if (!m) return reply.code(404).send({ error: 'unknown market' });
+      const rule = hedgeRule(m.outcome);
+      return rule
+        ? {
+            offered: true as const,
+            stock: rule.stock,
+            token: STOCK_TOKENS[rule.stock],
+            rule: rule.rule,
+            yesDirection: rule.yesDirection,
+            simulated: true as const,
+          }
+        : { offered: false as const };
+    },
+  );
+
+  app.get(
+    '/:orderId/quote',
+    {
+      ...route,
+      schema: {
+        tags,
+        security,
+        description: 'Simulated swap quote for an open bet; amount defaults to the stake.',
+        params: z.object({ orderId: z.string().min(1) }),
+        querystring: HedgeQuoteQuery,
+        response: { 200: HedgeQuote, ...errors(400, 401, 403, 404, 409, 503) },
+      },
+    },
+    async (req, reply) => {
       try {
-        return await quoteHedge(app.db, user.id, req.params.orderId, amt);
+        return await quoteHedge(app.db, userOf(req).id, req.params.orderId, req.query.amountUsd);
       } catch (e) {
         return rejected(reply, e);
       }
     },
   );
 
-  app.post('/', async (req, reply) => {
-    const user = await requireUser(req, reply);
-    if (!user || reply.sent) return;
-    const body = Open.safeParse(req.body);
-    if (!body.success) return reply.code(400).send({ error: body.error.flatten() });
-    try {
-      return reply
-        .code(201)
-        .send(view(await openHedge(app.db, user.id, body.data.orderId, body.data.amountUsd)));
-    } catch (e) {
-      return rejected(reply, e);
-    }
-  });
+  app.post(
+    '/',
+    {
+      ...route,
+      schema: {
+        tags,
+        security,
+        description: 'Open a hedge on an open bet: real confidential debit, simulated swap.',
+        body: HedgeOpen,
+        response: { 201: Hedge, ...errors(400, 401, 403, 404, 409, 503) },
+      },
+    },
+    async (req, reply) => {
+      try {
+        const h = await openHedge(app.db, userOf(req).id, req.body.orderId, req.body.amountUsd);
+        return reply.code(201).send(h);
+      } catch (e) {
+        return rejected(reply, e);
+      }
+    },
+  );
 
   const withReceipt = async (
     h: Parameters<typeof combinedReceipt>[0] & {
@@ -99,10 +130,10 @@ export const hedgeRoutes: FastifyPluginAsync = async (app) => {
       receiptTx: string | null;
     },
   ) => {
-    if (h.status !== 'closed') return view(h);
+    if (h.status !== 'closed') return h;
     const s = await app.db.settlement.findUniqueOrThrow({ where: { orderId: h.orderId } });
     const r = h.receiptId ? await app.db.receipt.findUnique({ where: { id: h.receiptId } }) : null;
-    return view({
+    return {
       ...h,
       receipt: {
         ...combinedReceipt(h, s),
@@ -110,26 +141,45 @@ export const hedgeRoutes: FastifyPluginAsync = async (app) => {
         payloadHash: r?.payloadHash,
         tempoMemoTx: h.receiptTx,
       },
-    });
+    };
   };
 
-  app.get('/', async (req, reply) => {
-    const user = await requireUser(req, reply);
-    if (!user || reply.sent) return;
-    const hs = await app.db.hedge.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    return { hedges: await Promise.all(hs.map(withReceipt)) };
-  });
+  app.get(
+    '/',
+    {
+      ...route,
+      schema: {
+        tags,
+        security,
+        response: { 200: z.object({ hedges: z.array(HedgeWithReceipt) }), ...errors(401) },
+      },
+    },
+    async (req) => {
+      const hs = await app.db.hedge.findMany({
+        where: { userId: userOf(req).id },
+        orderBy: { createdAt: 'desc' },
+      });
+      return { hedges: await Promise.all(hs.map(withReceipt)) };
+    },
+  );
 
-  app.get<{ Params: { orderId: string } }>('/:orderId', async (req, reply) => {
-    const user = await requireUser(req, reply);
-    if (!user || reply.sent) return;
-    const h = await app.db.hedge.findFirst({
-      where: { orderId: req.params.orderId, userId: user.id },
-    });
-    if (!h) return reply.code(404).send({ error: 'no hedge for that bet' });
-    return withReceipt(h);
-  });
+  app.get(
+    '/:orderId',
+    {
+      ...route,
+      schema: {
+        tags,
+        security,
+        params: z.object({ orderId: z.string().min(1) }),
+        response: { 200: HedgeWithReceipt, ...errors(401, 404) },
+      },
+    },
+    async (req, reply) => {
+      const h = await app.db.hedge.findFirst({
+        where: { orderId: req.params.orderId, userId: userOf(req).id },
+      });
+      if (!h) return reply.code(404).send({ error: 'no hedge for that bet' });
+      return withReceipt(h);
+    },
+  );
 };

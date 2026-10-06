@@ -5,69 +5,97 @@
 // order txid (only the payer knows it) is the capability to see this single payout.
 import { verifyReceipt } from '@tyr/receipts';
 import { ZcashRequestError, zcashDisclosure, zcashRequest } from '@tyr/zcash';
-import type { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
+import type { TyrPlugin } from '../contract.js';
+import {
+  TxidParams,
+  ZcashDisclosure,
+  ZcashOrder,
+  ZcashReceipt,
+  ZcashRequest,
+  ZcashRequestInput,
+  errors,
+} from '../schemas.js';
 
-const Req = z.object({
-  outcome: z.number().int().nonnegative(),
-  side: z.enum(['yes', 'no']),
-  stakeUsd: z.number().positive().max(10_000),
-  returnUA: z
-    .string()
-    .regex(/^u(1|test1|regtest1)[0-9a-z]+$/)
-    .max(255),
-});
+const tags = ['zcash'];
 
-export const zcashRoutes: FastifyPluginAsync = async (app) => {
-  app.post('/request', async (req, reply) => {
-    const body = Req.safeParse(req.body);
-    if (!body.success) return reply.code(400).send({ error: body.error.flatten() });
-    try {
-      return await zcashRequest(body.data);
-    } catch (e) {
-      if (e instanceof ZcashRequestError) return reply.code(400).send({ error: e.message });
-      throw e;
-    }
-  });
-
-  app.get<{ Params: { txid: string } }>('/orders/:txid', async (req, reply) => {
-    const zo = await app.db.zcashOrder.findUnique({
-      where: { txid: req.params.txid },
-      select: {
-        id: true,
-        txid: true,
-        status: true,
-        marketId: true,
-        side: true,
-        size: true,
-        zecUsd: true,
-        payoutZat: true,
-        payoutTxid: true,
-        error: true,
-        orderId: true,
+export const zcashRoutes: TyrPlugin = async (app) => {
+  app.post(
+    '/request',
+    {
+      schema: {
+        tags,
+        description: 'ZIP-321 payment request for a shielded bet (Flow B). No account needed.',
+        body: ZcashRequestInput,
+        response: { 200: ZcashRequest, ...errors(400) },
       },
-    });
-    if (!zo) return reply.code(404).send({ error: 'no order for that txid yet' });
-    return { ...zo, payoutZat: zo.payoutZat?.toString() ?? null };
-  });
+    },
+    async (req, reply) => {
+      try {
+        return await zcashRequest(req.body);
+      } catch (e) {
+        if (e instanceof ZcashRequestError) return reply.code(400).send({ error: e.message });
+        throw e;
+      }
+    },
+  );
 
-  app.get<{ Params: { txid: string } }>('/orders/:txid/disclosure', async (req, reply) => {
-    const d = await zcashDisclosure(app.db, req.params.txid);
-    if (!d) return reply.code(404).send({ error: 'no paid-out order for that txid' });
-    return d;
-  });
+  app.get(
+    '/orders/:txid',
+    { schema: { tags, params: TxidParams, response: { 200: ZcashOrder, ...errors(404) } } },
+    async (req, reply) => {
+      const zo = await app.db.zcashOrder.findUnique({
+        where: { txid: req.params.txid },
+        select: {
+          id: true,
+          txid: true,
+          status: true,
+          marketId: true,
+          side: true,
+          size: true,
+          zecUsd: true,
+          payoutZat: true,
+          payoutTxid: true,
+          error: true,
+          orderId: true,
+        },
+      });
+      if (!zo) return reply.code(404).send({ error: 'no order for that txid yet' });
+      return zo;
+    },
+  );
+
+  app.get(
+    '/orders/:txid/disclosure',
+    {
+      schema: {
+        tags,
+        description: 'OVK view of the payout + FROST 2-of-3 check (the txid is the capability).',
+        params: TxidParams,
+        response: { 200: ZcashDisclosure, ...errors(404) },
+      },
+    },
+    async (req, reply) => {
+      const d = await zcashDisclosure(app.db, req.params.txid);
+      if (!d) return reply.code(404).send({ error: 'no paid-out order for that txid' });
+      return d;
+    },
+  );
 
   // PRD 10: Flow B bettors have no account, so the order txid is the capability (as above).
-  app.get<{ Params: { txid: string } }>('/orders/:txid/receipt', async (req, reply) => {
-    const r = await app.db.receipt.findUnique({
-      where: { kind_subjectId: { kind: 'zcash-payout', subjectId: req.params.txid } },
-    });
-    if (!r) return reply.code(404).send({ error: 'no receipt for that txid yet' });
-    return {
-      id: r.id,
-      payloadHash: r.payloadHash,
-      payload: r.payload,
-      verification: await verifyReceipt(app.db, r),
-    };
-  });
+  app.get(
+    '/orders/:txid/receipt',
+    { schema: { tags, params: TxidParams, response: { 200: ZcashReceipt, ...errors(404) } } },
+    async (req, reply) => {
+      const r = await app.db.receipt.findUnique({
+        where: { kind_subjectId: { kind: 'zcash-payout', subjectId: req.params.txid } },
+      });
+      if (!r) return reply.code(404).send({ error: 'no receipt for that txid yet' });
+      return {
+        id: r.id,
+        payloadHash: r.payloadHash,
+        payload: r.payload,
+        verification: await verifyReceipt(app.db, r),
+      };
+    },
+  );
 };

@@ -4,7 +4,7 @@
 > Deadline: **Oct 12, 2026, 11:59pm PT**. Scope freeze: Oct 11.
 > Audience: the builder (you), coding this step by step.
 
-## Progress (updated 2026-10-06, Phase 10)
+## Progress (updated 2026-10-06, Phase 11)
 
 | Phase                    | Status                      | Notes                                                                                            |
 | ------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -19,8 +19,9 @@
 | 8 — Agent API            | ✅ Done                     | 3/3 live (mppx 402 spike, agent.mpp, agent.bet via `examples/agent.ts`); Flow A regression green |
 | 9 — Robinhood hedge      | ✅ Done (simulated swap)    | 12/12 live (price/inventory, mapping, swap math) + Flow D e2e; Flow A regression green           |
 | 10 — Receipts & proofs   | ✅ Done                     | receipts.test 3/3 live; all 26 DB receipts verify on-chain; Flow D regression green              |
-| 11 — API surface freeze  | ⏭ Next                      |                                                                                                  |
-| 12–13                    | ⬜ Not started              |                                                                                                  |
+| 11 — API surface freeze  | ✅ Done (1 re-run pending)  | contract 7/7 live, 45 ops; Flow A/C/D + receipts green in strict mode; api.deposits needs RH ETH |
+| 12 — Frontend            | ⏭ Next                      |                                                                                                  |
+| 13                       | ⬜ Not started              |                                                                                                  |
 
 **Owner-approved deviations** (details + reasons in `docs/human-values.md` → Decisions):
 
@@ -406,7 +407,12 @@ _Shipped as:_ ✅ `rh.price.test.ts` (live oracle + on-chain symbol/inventory, s
 
 ---
 
-## Phase 11 — Backend API surface (freeze before frontend)
+## Phase 11 — Backend API surface (freeze before frontend) — ✅ DONE
+
+> Built as `services/api/src/schemas.ts` (zod wire schemas), `contract.ts` (zod request validation, response validation, error shape, boot-time guard), `openapi.ts` → `services/api/openapi.yaml` (`@fastify/swagger` + `fastify-type-provider-zod`), and `packages/api-client` (`openapi-typescript` types + `openapi-fetch`, `createTyrClient`, `WsEvent`). Regenerate both with `pnpm --filter @tyr/api openapi`.
+> Every route declares its body/params/query/response schemas; the app refuses to boot if a route has no response schema. Responses are checked in JSON wire form (Decimal/BigInt → string, Date → ISO). A violation is a 500 in dev/test (`strict`) and a logged warning in production.
+> Auth runs as `preValidation` hooks (`authUser`, `authAgent`), so 401/403 still come before 400. Validation errors are `400 { error, code: 'validation', issues[] }`, and every error has the shape `{ error, code? }`.
+> As built vs the table below: loss limits are `POST /api/limits/prepare` → `PUT /api/limits/confirm` → `GET /api/limits` (the passkey authorizes on-chain in between). The hedge quote is per bet: `GET /api/hedge/:orderId/quote`, and eligibility is `GET /api/hedge/markets/:marketId`. `/ws` is documented as the `WsEvent` component.
 
 Publish an OpenAPI spec (`services/api/openapi.yaml`, generated from zod via `fastify-type-provider-zod`) and a typed client (`packages/api-client`, generated with `openapi-typescript`).
 
@@ -431,6 +437,7 @@ Publish an OpenAPI spec (`services/api/openapi.yaml`, generated from zod via `fa
 | WS      | `/ws`                                            | live order/settlement/deposit events        |
 
 **Tests:** `api.contract.test.ts` — every route against the running server, schema validated; full e2e re-run of Flows A–D through HTTP only.
+_Shipped as:_ ✅ `api.contract.test.ts` 7/7 live: no spec drift; every protected op returns 401 to anonymous callers; every agent op returns 403 to an unconfirmed key; all 45 ops are exercised through `@tyr/api-client` with no 5xx under strict mode; a real public `bet` receipt (proof + verify) and a Flow B receipt/disclosure; every persisted Order/Deposit/Hedge row matches its schema. ✅ Strict-mode re-runs green: `e2e.flowA`, `e2e.flowD`, `agent.mpp`, `agent.bet`, `api.tempo`, `api.hl`, `receipts`. ⚠️ `api.deposits` is pending re-run: the EVM test sender `0xf588…25c0` has no RH testnet ETH (`insufficient funds`), so this is unrelated to the code. Flow B's HTTP surface is covered by the contract test; its pipeline e2e lives in `packages/zcash`.
 
 ✅ **Backend done gate:** all phase suites green on live testnets in one CI run; `docs/evidence.md` updated.
 

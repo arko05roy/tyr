@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "openapi": "tsx src/openapi.ts && pnpm --filter @tyr/api-client generate"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
+    "@fastify/swagger": "^9.9.1",
     "@fastify/websocket": "^11.3.3",
     "@tyr/core": "workspace:*",
     "@tyr/db": "workspace:*",
@@ -23,11 +25,14 @@
     "@tyr/zcash": "workspace:*",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.0",
+    "fastify-type-provider-zod": "^4.0.2",
     "viem": "^2.57.3",
+    "yaml": "^2.9.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/ws": "^8.18.2",
+    "@tyr/api-client": "workspace:*",
     "mppx": "0.13.1",
     "ws": "^8.22.0"
   }

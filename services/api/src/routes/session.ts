@@ -1,3 +1,4 @@
+import type { User } from '@tyr/db';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 export const SESSION_COOKIE = 'tyr_session';
@@ -29,9 +30,21 @@ export async function sessionUser(req: FastifyRequest) {
   return s && s.expiresAt >= new Date() ? s.user : null;
 }
 
-/** Resolve the logged-in user or send 401. */
-export async function requireUser(req: FastifyRequest, reply: FastifyReply) {
+/** preValidation hook: 401 unless logged in (before body validation, so 401 wins over 400). */
+export async function authUser(req: FastifyRequest, reply: FastifyReply) {
   const user = await sessionUser(req);
   if (!user) return reply.code(401).send({ error: 'unauthenticated' });
-  return user;
+  req.user = user;
+}
+
+/** The user authUser attached. */
+export function userOf(req: FastifyRequest): User {
+  if (!req.user) throw new Error('route is missing the authUser hook');
+  return req.user;
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    user?: User;
+  }
 }
