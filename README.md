@@ -2,10 +2,6 @@
 
 <img src="apps/web/public/brand/Banner.png" alt="tyr" width="100%" />
 
-<br />
-
-<img src="apps/web/public/brand/logo-nobg.png" alt="tyr logo" width="96" />
-
 <h1>tyr</h1>
 
 <strong>The private prediction account.<br>Trade Polymarket, Kalshi and Hyperliquid from one account that hides your bankroll,<br>caps your losses on-chain, and lets an AI agent bet for you without ever going over.</strong>
@@ -18,26 +14,33 @@
 
 ---
 
-## Contents
-
-- [What tyr is](#what-tyr-is) · [Only on tyr](#only-on-tyr) · [Bigger than crypto](#prediction-markets-are-bigger-than-crypto) · [Why now](#why-now)
-- [Product tour](#product-tour) · [How it works](#how-it-works) · [How the router picks a price](#how-the-router-picks-a-price)
-- [Architecture](#architecture) · [What's real and what's simulated](#whats-real-and-whats-simulated) · [Privacy, trust and compliance](#privacy-trust-and-compliance)
-- [Business model](#business-model) · [Demo](#demo-90-seconds) · [Quickstart](#quickstart) · [Roadmap](#roadmap) · [Team](#team)
-
----
-
 ## What tyr is
 
-Prediction markets became a $24B-a-month market. The way you hold money in them hasn't kept up.
+Prediction markets became a $24B-a-month market. But the consumer UX still hasnt caught up.
 
-Today every bet is a public record tied to your wallet. Every venue is a separate account on a separate chain. There's no real limit on what you can lose, and nothing stops an AI agent with your keys from spending everything.
+Today:
 
-**tyr is the account layer prediction markets are missing.** It plays the role a brokerage account plays for stocks. You sign up with a fingerprint, fund it from any chain, and trade **Polymarket, Kalshi and Hyperliquid** from one balance. Three things are true of that balance that aren't true anywhere else:
+- Every bet is a public record tied to your wallet.
+- Every venue is a separate account on a separate chain.
+- There's no real limit on what you can lose.
+- Nothing stops an AI agent with your keys from spending everything.
 
-- **It's private.** Nobody can see how much you hold or how much you bet.
-- **It has a hard ceiling.** Your loss limit is enforced by the chain, not by an app setting or a promise.
-- **It's safe to hand to an agent.** An AI can trade on your behalf, and it physically can't spend past the cap you set.
+### tyr is the account prediction markets were missing.
+
+Think brokerage account, but for every prediction market at once.
+
+**Touch your fingerprint → fund from any chain → trade Polymarket, Kalshi and Hyperliquid from one balance.**
+
+And that balance can do three things no other account can:
+
+> 🕶️ **No one sees your money.**
+> Not your balance. Not your bet size. Not even on the block explorer.
+>
+> 🛑 **Your limit is law.**
+> Set it once and the chain enforces it. No "are you sure?" pop-up you can click through.
+>
+> 🤖 **Your AI can trade, but it can't go rogue.**
+> Hand an agent a budget, not your keys. It literally cannot spend a cent past your cap.
 
 ## Only on tyr
 
@@ -308,42 +311,37 @@ pnpm test:e2e       # Playwright (apps/web/e2e)
 ```
 tyr/
 ├── apps/
-│   └── web/            # Mobile-first Next.js app, Playwright e2e
+│   └── web/                # Next.js frontend, Playwright e2e
+├── services/
+│   ├── api/                # Fastify REST + WebSocket API, auth, orchestration (OpenAPI spec)
+│   ├── workers/            # BullMQ workers: deposits, Zcash scanner, settlement, payouts
+│   ├── frost-signer/       # Rust FROST threshold signer for the Zcash relayer
+│   └── zcash-sidecar/      # Rust Zcash sidecar
 ├── packages/
-│   └── venues/         # Market model, venue adapters, cross-venue matching, router
-└── docs/               # Idea, PRD, research
+│   ├── core/               # Shared types, zod schemas, config, testnet guard
+│   ├── api-client/         # Typed client for the tyr API
+│   ├── db/                 # Prisma schema and database client
+│   ├── pipeline/           # Bet pipeline: limit → bankroll → venue → settlement
+│   ├── venues/             # Market model, venue adapters, cross-venue matching, router
+│   ├── hyperliquid/        # Hyperliquid trading adapter (signing, builder code)
+│   ├── tempo/              # Tempo accounts, spend-limited sessions, memo payouts
+│   ├── solana/             # Token-2022 confidential balances + Anchor client
+│   ├── zcash/              # Memo codec, ZIP-321 payment requests, FROST coordinator
+│   ├── robinhood/          # Stock Token hedge, price reader, geofence
+│   ├── evm-deposits/       # Base / Arbitrum / Ethereum deposit watchers
+│   └── receipts/           # Receipts and proofs
+├── programs/
+│   └── tyr_settlement/     # Anchor settlement program (Solana)
+├── infra/                  # Docker Compose: Postgres, Redis, Zcash regtest, FROST
+├── examples/
+│   └── agent.ts            # AI agent trading under a capped session
+├── scripts/                # Wallet generation, funding and setup scripts
+├── spikes/                 # Early chain spikes (Solana, Zcash, Tempo, Hyperliquid, Robinhood)
+├── brand-assets/           # Logo, banner, style
+└── docs/                   # Idea, PRD, research, test evidence
 ```
 
 ---
-
-## Roadmap
-
-- [x] Multi-venue layer: unified market model, simulated Polymarket / Kalshi / Limitless, cross-venue events, best-price router
-- [ ] Core path: Tempo account → fund → Solana confidential balance → Hyperliquid bet → Tempo payout
-- [ ] Zcash memo-as-order, capped agent sessions, receipts and proofs
-- [ ] Robinhood Chain hedge on testnet
-- [ ] Deposit routes from Base · Arbitrum · Ethereum
-- [ ] **After the hackathon:** take the first simulated venue live (Kalshi via tokenized outcomes on Solana) once resolution-rule matching is in place
-
-## Open risks
-
-We're building these with eyes open:
-
-1. **Confidential Balances proofs in the browser:** SDK maturity and speed. _Highest risk._
-2. Zcash memo round trip, FROST tooling, ZEC float for payouts.
-3. A working Tempo ↔ Solana route.
-4. Hyperliquid builder-code terms and which outcome markets are tradable via API.
-5. Which index-ETF Stock Tokens and pools exist on Robinhood Chain testnet.
-
----
-
-## Team
-
-> Who's building this and why you'll ship it. One line each: role, what you've shipped, where to find you.
-
-|              | Role              | Background                         |
-| ------------ | ----------------- | ---------------------------------- |
-| **Arko Roy** | Founder / builder | _(what you've shipped, X, GitHub)_ |
 
 ## Built with
 
