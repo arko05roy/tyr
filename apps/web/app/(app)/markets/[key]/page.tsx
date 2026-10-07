@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { use, useDeferredValue, useState } from "react";
 import { api, cents, newKey, ok, usd } from "../../../_app/api";
 import { useBalance, useLimit, useMarketEvents, useMe, useVenues } from "../../../_app/hooks";
-import { Empty, ErrorNote, PageHead, SimBadge, Stat } from "../../../_app/ui";
+import { RouteMap } from "../../../_app/route-map";
+import { Empty, ErrorNote, PageHead, SimBadge } from "../../../_app/ui";
 
 function HedgeCard({ outcome }: { outcome: string }) {
   const offer = useQuery({
@@ -115,24 +116,11 @@ export default function EventPage({ params }: { params: Promise<{ key: string }>
 
           {q && (
             <div className="mt-6">
-              <h2 className="font-serif text-2xl">How tyr would fill {usd(stake, 0)}</h2>
-              <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                <Stat label="Contracts" value={q.contracts.toFixed(1)} sub={`avg ${cents(q.avgAllInPx)} all-in`} />
-                <Stat label="Pays if right" value={usd(q.contracts)} sub={`cost ${usd(q.costUsd)}`} />
-                <Stat label="Vs worst venue" value={`+${q.edgeVsWorst.toFixed(1)}`} sub="extra contracts" />
-              </div>
-              <ul className="mt-4 space-y-2 text-sm">
-                {q.legs.map((l) => (
-                  <li key={l.marketId} className="panel flex justify-between px-4 py-2">
-                    <span>
-                      {mode.get(l.venue)?.name ?? l.venue} · {l.sz.toFixed(1)} @ {cents(l.avgPx)}
-                    </span>
-                    <span className="num text-ink-soft">
-                      {usd(l.costUsd)} + {usd(l.feeUsd)} fee
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <RouteMap
+                q={q}
+                names={(v) => mode.get(v as never)?.name ?? v}
+                stale={quote.isPlaceholderData || quote.isFetching}
+              />
             </div>
           )}
           {hl && <HedgeCard outcome={hl.marketId.split(":")[1] ?? ""} />}

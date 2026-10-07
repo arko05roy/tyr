@@ -52,7 +52,7 @@ test("passkey signup → loss limit → fund → routed bet → settlement", asy
   );
   const ev = events.find((e: { venues: { venue: string }[] }) => e.venues.every((v) => v.venue !== "hyperliquid"));
   await page.goto(`/markets/${encodeURIComponent(ev.eventKey)}`);
-  await expect(page.getByText(/How tyr would fill/)).toBeVisible();
+  await expect(page.getByText(/Best route/)).toBeVisible();
   await page.getByLabel("Stake (USD)").fill("20");
   await page.getByRole("button", { name: /^Bet \$20 on YES$/ }).click();
   await expect(page).toHaveURL(/\/portfolio/, { timeout: 300_000 });
