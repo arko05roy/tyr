@@ -8,7 +8,7 @@
 
 <h1>tyr</h1>
 
-<strong>Bet on anything, on every market, from any chain,<br>with a hidden bankroll and a loss limit you can't break.</strong>
+<strong>The private prediction account.<br>Trade Polymarket, Kalshi and Hyperliquid from one account that hides your bankroll,<br>caps your losses on-chain, and lets an AI agent bet for you without ever going over.</strong>
 
 <br /><br />
 
@@ -20,36 +20,51 @@
 
 ## Contents
 
-- [TL;DR](#tldr) · [The problem](#the-problem) · [Why now](#why-now)
+- [What tyr is](#what-tyr-is) · [Only on tyr](#only-on-tyr) · [Bigger than crypto](#prediction-markets-are-bigger-than-crypto) · [Why now](#why-now)
 - [Product tour](#product-tour) · [How it works](#how-it-works) · [How the router picks a price](#how-the-router-picks-a-price)
 - [Architecture](#architecture) · [What's real and what's simulated](#whats-real-and-whats-simulated) · [Privacy, trust and compliance](#privacy-trust-and-compliance)
 - [Business model](#business-model) · [Demo](#demo-90-seconds) · [Quickstart](#quickstart) · [Roadmap](#roadmap) · [Team](#team)
 
 ---
 
-## TL;DR
+## What tyr is
 
-- **Sign up with a fingerprint.** No seed phrase, no gas token, no chain to pick. _(Tempo passkeys, sponsored fees)_
-- **Fund privately from anywhere.** Deposit from Base, Arbitrum, Ethereum or Solana, or send shielded Zcash where **the encrypted memo is the order**.
-- **Hidden bankroll.** Balance and transfer amounts are encrypted on Solana. The explorer shows only that an account exists.
-- **Every venue, one screen.** Hyperliquid, Polymarket, Kalshi and Limitless side by side. A router splits each bet by **all-in price**, fees included.
-- **A loss limit nothing can break, including your AI agent.** _(Tempo MPP spend-limited sessions)_
-- **Bet and hedge.** Hedge a macro bet in one tap with an index-ETF Stock Token on Robinhood Chain _(eligible regions, testnet)_.
-- **Receipts you can prove or keep private.**
+Prediction markets became a $24B-a-month market. The way you hold money in them hasn't kept up.
 
-## The problem
+Today every bet is a public record tied to your wallet. Every venue is a separate account on a separate chain. There's no real limit on what you can lose, and nothing stops an AI agent with your keys from spending everything.
 
-Prediction markets are the fastest-growing category in crypto. Using them is still broken in three ways:
+**tyr is the account layer prediction markets are missing.** It plays the role a brokerage account plays for stocks. You sign up with a fingerprint, fund it from any chain, and trade **Polymarket, Kalshi and Hyperliquid** from one balance. Three things are true of that balance that aren't true anywhere else:
 
-|                | What it looks like today                                                                                                    |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Public**     | Anyone can see your balance, every bet and your wallet history.                                                             |
-| **Annoying**   | Wallet, right chain, right gas token, seed phrase, all before the first bet.                                                |
-| **Fragmented** | The same question trades on several venues at different prices. You pick one and overpay, or juggle accounts across chains. |
+- **It's private.** Nobody can see how much you hold or how much you bet.
+- **It has a hard ceiling.** Your loss limit is enforced by the chain, not by an app setting or a promise.
+- **It's safe to hand to an agent.** An AI can trade on your behalf, and it physically can't spend past the cap you set.
 
-tyr fixes all three in one app: a passkey account with no crypto setup, a bankroll that stays encrypted, and a router that finds the best all-in price across every major venue.
+## Only on tyr
 
-A front end for one venue is a niche. **An aggregator is where the fragmentation becomes the product**: a bigger market, real cross-venue price gaps, and a fee on every venue it routes to.
+|                                              | What you get                                                                                                                                         | What makes it possible                                 |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 🕶️ **A bet nobody can see**                  | Send shielded Zcash and the encrypted memo _is_ the order. Your bankroll lives in an encrypted balance; the explorer sees an account, not an amount. | Zcash shielded memos · Solana Confidential Balances    |
+| 🛑 **Limits the chain enforces**             | Set $50/day once. Every bet, from you or your agent, is checked against it on-chain. Over the limit is blocked, not warned.                          | Tempo spend-limited sessions (MPP)                     |
+| 🤖 **An agent with a budget, not your keys** | Give an AI a capped session. It trades and pays for its own data per call. You see every receipt.                                                    | Tempo MPP · HTTP 402                                   |
+| 🛡️ **Bet and hedge in one tap**              | Betting on a Fed decision? Hedge it with an S&P Stock Token in the same ticket, with one combined receipt.                                           | Robinhood Chain Stock Tokens                           |
+| 🧾 **Proof without exposure**                | Prove one payout for taxes or a counterparty without revealing anything else.                                                                        | Zcash viewing keys · Solana auditor keys · Tempo memos |
+| 🌐 **Every market, best price**              | Polymarket, Kalshi, Hyperliquid and Limitless from one balance. Each bet goes where it's cheapest after fees.                                        | tyr router                                             |
+
+No seed phrase. No gas. No chain picker. One fingerprint.
+
+## Prediction markets are bigger than crypto
+
+Prediction markets aren't a crypto niche. They're a mainstream financial market, and crypto questions are a small share of what trades.
+
+|                                     | Data                                                                                                                                                                                  | Source                                                                                                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Volume**                          | Combined monthly volume on Kalshi and Polymarket rose from **under $5B (Sept 2025) to about $24B (April 2026)**, roughly 5× in seven months.                                          | [Pew Research, May 2026](https://www.pewresearch.org/short-reads/2026/05/27/trading-volume-on-prediction-markets-has-soared-in-recent-months/)           |
+| **Already bigger than sportsbooks** | That ~$24B a month is above the **~$14B a month** wagered through all legal US sportsbooks in 2025.                                                                                   | [Pew Research](https://www.pewresearch.org/short-reads/2026/05/27/trading-volume-on-prediction-markets-has-soared-in-recent-months/)                     |
+| **Mostly not crypto**               | Crypto questions are just **7% of Kalshi volume** and **20% of Polymarket's**. Sports is 80% of Kalshi and 39% of Polymarket; politics is 32% of Polymarket (July 2024 – April 2026). | [Pew Research](https://www.pewresearch.org/short-reads/2026/05/27/trading-volume-on-prediction-markets-has-soared-in-recent-months/)                     |
+| **Wall Street is in**               | NYSE owner **Intercontinental Exchange** agreed to invest up to **$2B in Polymarket** (Oct 2025) and distribute its data.                                                             | [Bloomberg Law](https://news.bloomberglaw.com/crypto/nyse-owner-to-invest-2-billion-in-betting-platform-polymarket)                                      |
+| **Valued like exchanges**           | Kalshi raised at **$22B** (May 2026) from Coatue, Sequoia, a16z and Morgan Stanley, and is reported to be seeking **$40B**. Polymarket is valued at **$15B**.                         | [CoinDesk, June 2026](https://www.coindesk.com/business/2026/06/24/kalshi-targets-a-massive-usd40-billion-valuation-widening-lead-over-rival-polymarket) |
+
+**What it means for tyr:** the people moving this volume are sports fans, politics watchers and macro traders, not crypto natives. They won't manage seed phrases or bridge between chains, and they don't want their bets public. tyr is built for them: one fingerprint, one private balance, and Polymarket and Kalshi, where this volume trades, on the same screen.
 
 ## Why now
 
@@ -69,7 +84,7 @@ Every piece tyr needs went live in the last six months:
 
 > Screenshots go in `docs/screenshots/`. One per step, so reviewers can follow the product without running it.
 
-|                              Sign up with a fingerprint                              |                              One question, every venue                               |                                          Hidden bankroll                                           |
+|                              Sign up with a fingerprint                              |                              One question, every venue                               |                                          Private balance                                           |
 | :----------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
 |     <img src="docs/screenshots/signup.png" width="240" alt="Passkey sign-up" />      | <img src="docs/screenshots/markets.png" width="240" alt="Cross-venue market view" /> | <img src="docs/screenshots/bankroll.png" width="240" alt="Encrypted balance on Solana explorer" /> |
 |                           **Router split with fee lines**                            |                             **Over the limit → blocked**                             |                                     **Bet and hedge receipt**                                      |
