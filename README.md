@@ -4,7 +4,7 @@
 
 <h1>tyr</h1>
 
-<strong>The UX layer for all prediction markets.<br>Trade Polymarket, Kalshi and Hyperliquid from one account that hides your bankroll,<br>caps your losses on-chain, and lets an AI agent bet for you without ever going over.</strong>
+<strong>The UX layer for all prediction markets.<br>Trade Polymarket, Kalshi,World.xyz and Hyperliquid from one account that hides your bankroll,<br>caps your losses on-chain, and lets an AI agent bet for you without ever going over.</strong>
 
 [Live demo](#) · [Demo video (90s)](#) · [Pitch](#) · [X](#)
 
