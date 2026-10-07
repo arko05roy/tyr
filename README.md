@@ -4,9 +4,7 @@
 
 <h1>tyr</h1>
 
-<strong>The private prediction account.<br>Trade Polymarket, Kalshi and Hyperliquid from one account that hides your bankroll,<br>caps your losses on-chain, and lets an AI agent bet for you without ever going over.</strong>
-
-<br /><br />
+<strong>The UX layer for all prediction markets.<br>Trade Polymarket, Kalshi and Hyperliquid from one account that hides your bankroll,<br>caps your losses on-chain, and lets an AI agent bet for you without ever going over.</strong>
 
 [Live demo](#) · [Demo video (90s)](#) · [Pitch](#) · [X](#)
 
@@ -33,25 +31,25 @@ Think brokerage account, but for every prediction market at once.
 
 And that balance can do three things no other account can:
 
-> 🕶️ **No one sees your money.**
+> **No one sees your money.**
 > Not your balance. Not your bet size. Not even on the block explorer.
 >
-> 🛑 **Your limit is law.**
+> **Your limit is law.**
 > Set it once and the chain enforces it. No "are you sure?" pop-up you can click through.
 >
-> 🤖 **Your AI can trade, but it can't go rogue.**
+> **Your AI can trade, but it can't go rogue.**
 > Hand an agent a budget, not your keys. It literally cannot spend a cent past your cap.
 
 ## Only on tyr
 
-|                                              | What you get                                                                                                                                         | What makes it possible                                 |
-| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| 🕶️ **A bet nobody can see**                  | Send shielded Zcash and the encrypted memo _is_ the order. Your bankroll lives in an encrypted balance; the explorer sees an account, not an amount. | Zcash shielded memos · Solana Confidential Balances    |
-| 🛑 **Limits the chain enforces**             | Set $50/day once. Every bet, from you or your agent, is checked against it on-chain. Over the limit is blocked, not warned.                          | Tempo spend-limited sessions (MPP)                     |
-| 🤖 **An agent with a budget, not your keys** | Give an AI a capped session. It trades and pays for its own data per call. You see every receipt.                                                    | Tempo MPP · HTTP 402                                   |
-| 🛡️ **Bet and hedge in one tap**              | Betting on a Fed decision? Hedge it with an S&P Stock Token in the same ticket, with one combined receipt.                                           | Robinhood Chain Stock Tokens                           |
-| 🧾 **Proof without exposure**                | Prove one payout for taxes or a counterparty without revealing anything else.                                                                        | Zcash viewing keys · Solana auditor keys · Tempo memos |
-| 🌐 **Every market, best price**              | Polymarket, Kalshi, Hyperliquid and Limitless from one balance. Each bet goes where it's cheapest after fees.                                        | tyr router                                             |
+|                                           | What you get                                                                                                                                         | What makes it possible                                 |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **A bet nobody can see**                  | Send shielded Zcash and the encrypted memo _is_ the order. Your bankroll lives in an encrypted balance; the explorer sees an account, not an amount. | Zcash shielded memos · Solana Confidential Balances    |
+| **Limits the chain enforces**             | Set $50/day once. Every bet, from you or your agent, is checked against it on-chain. Over the limit is blocked, not warned.                          | Tempo spend-limited sessions (MPP)                     |
+| **An agent with a budget, not your keys** | Give an AI a capped session. It trades and pays for its own data per call. You see every receipt.                                                    | Tempo MPP · HTTP 402                                   |
+| **Bet and hedge in one tap**              | Betting on a Fed decision? Hedge it with an S&P Stock Token in the same ticket, with one combined receipt.                                           | Robinhood Chain Stock Tokens                           |
+| **Proof without exposure**                | Prove one payout for taxes or a counterparty without revealing anything else.                                                                        | Zcash viewing keys · Solana auditor keys · Tempo memos |
+| **Every market, best price**              | Polymarket, Kalshi, Hyperliquid and Limitless from one balance. Each bet goes where it's cheapest after fees.                                        | tyr router                                             |
 
 No seed phrase. No gas. No chain picker. One fingerprint.
 
@@ -80,18 +78,6 @@ Every piece tyr needs went live in the last six months:
 | **Robinhood Chain** mainnet with Stock Tokens                                      | July 1, 2026    | 24/7 tokenized stocks with a Chainlink feed per token, so a bet can carry a real hedge                |
 | **Tempo** mainnet with MPP (co-authored with Stripe)                               | 2026            | Passkeys, sponsored fees and spend-limited sessions as protocol features, not app logic               |
 | **Solana Breakpoint 2026** headlines prediction markets and AI agents              | Nov 15–17, 2026 | The ecosystem is pushing both of tyr's users: retail bettors and agents                               |
-
----
-
-## Product tour
-
-> Screenshots go in `docs/screenshots/`. One per step, so reviewers can follow the product without running it.
-
-|                              Sign up with a fingerprint                              |                              One question, every venue                               |                                          Private balance                                           |
-| :----------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
-|     <img src="docs/screenshots/signup.png" width="240" alt="Passkey sign-up" />      | <img src="docs/screenshots/markets.png" width="240" alt="Cross-venue market view" /> | <img src="docs/screenshots/bankroll.png" width="240" alt="Encrypted balance on Solana explorer" /> |
-|                           **Router split with fee lines**                            |                             **Over the limit → blocked**                             |                                     **Bet and hedge receipt**                                      |
-| <img src="docs/screenshots/route.png" width="240" alt="Order split across venues" /> |    <img src="docs/screenshots/limit.png" width="240" alt="Loss limit enforced" />    |          <img src="docs/screenshots/hedge.png" width="240" alt="Payout and hedge P&L" />           |
 
 ---
 
@@ -210,43 +196,6 @@ Matching is curated, not fuzzy. Two venues can resolve the "same" question diffe
 | 8   | Receipts / proofs            | Memo receipts, viewing-key and auditor-key disclosures                    |
 | 9   | Agent API                    | Market data and orders for capped agents, paid per call                   |
 | 10  | Hedge service                | Uniswap swap adapter, Chainlink price reader, geofence gate               |
-
----
-
-## What's real and what's simulated
-
-| Piece                                       | Status                                                                                                                                              |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hyperliquid execution (HIP-4, builder code) | **Live**                                                                                                                                            |
-| Polymarket, Kalshi, Limitless               | **Simulated adapters** behind the same interface: modeled books and fee schedules, every fill `simulated: true`. Going live is writing one adapter. |
-| Robinhood Chain hedge                       | **Testnet**, simulated Stock Tokens                                                                                                                 |
-| Base · Arbitrum · Ethereum                  | Deposit sources only                                                                                                                                |
-| Tempo Zones                                 | Stretch, availability unknown                                                                                                                       |
-
-## Privacy, trust and compliance
-
-### What's private and what isn't
-
-| Private                                                              | Not private                                                                                                               |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Bankroll balance and transfer amounts (Solana Confidential Balances) | That the account exists, its owner and the mint                                                                           |
-| The bet instruction inside a shielded Zcash memo                     | Positions on the venue once funds leave the confidential balance: Hyperliquid, Polymarket and Limitless are public chains |
-| Which payouts you disclose, via viewing or auditor keys              | Zcash exits on today's intent routes go through **transparent** addresses, so there's a visible hop                       |
-
-**Privacy covers custody and inbound funding, not the trade on the venue.**
-
-### Trust model
-
-- **Loss limits** are enforced by Tempo MPP sessions, not by tyr's backend. A compromised client or an agent can't exceed them.
-- **The Zcash relayer is a trust point**, even as a FROST threshold group where no single operator holds the funds. We disclose it in the product.
-- **The Solana auditor key** is optional and decrypts transfer amounts, not balances.
-- tyr **never asks for a seed phrase or private key.**
-
-### Compliance
-
-- **Robinhood Stock Tokens** are not available in the US or to US persons, and are restricted in Canada, the UK, Switzerland, the UAE and sanctioned jurisdictions. The hedge is **geofenced and hidden** there. tyr does not help anyone bypass geoblocks.
-- **Each venue follows the user's region.** Polymarket International blocks the US. Kalshi is CFTC-regulated, so tyr targets its **tokenized outcomes on Solana** rather than pooling funds through its direct API, which would need per-user KYC.
-- Betting rules vary by jurisdiction. Tempo's TIP-403 policy registry can gate payouts by policy.
 
 ---
 
