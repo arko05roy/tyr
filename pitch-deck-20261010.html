@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tyr pitch deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F8F5E7; --cream-2:#F1EDD9; --butter:#F3D757; --sage:#D6E2B4; --moss:#8FA671; --olive:#4C6B46; --charcoal:#2B2B2B;
+  --c-bg:var(--cream); --c-card:#FFFDF3; --c-border:rgba(43,43,43,.12);
+  --c-text:var(--charcoal); --c-text-2:rgba(43,43,43,.68); --c-muted:rgba(43,43,43,.45);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--c-bg);color:var(--c-text);font-family:var(--sans)}
+.deck{width:100vw;height:100vh;position:relative}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6vh 7vw;opacity:0;pointer-events:none;transition:opacity .5s cubic-bezier(.16,1,.3,1);background:var(--c-bg)}
+.slide.active{opacity:1;pointer-events:auto}
+.slide.dark{background:var(--olive);color:var(--cream)}
+.slide.dark .body,.slide.dark .small{color:rgba(248,245,231,.78)}
+.slide.dark .caption{color:var(--butter)}
+.slide.active .a{animation:up .6s cubic-bezier(.16,1,.3,1) both}
+.slide.active .a:nth-child(2){animation-delay:.08s}.slide.active .a:nth-child(3){animation-delay:.16s}.slide.active .a:nth-child(4){animation-delay:.24s}.slide.active .a:nth-child(5){animation-delay:.32s}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.hero{font-family:var(--serif);font-weight:900;font-size:clamp(44px,7vw,112px);line-height:1.02;letter-spacing:-.02em}
+.h1{font-family:var(--serif);font-weight:700;font-size:clamp(34px,4.6vw,72px);line-height:1.08;letter-spacing:-.015em}
+.h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,2.8vw,44px);line-height:1.15}
+.h3{font-family:var(--serif);font-weight:600;font-size:clamp(18px,1.8vw,28px);line-height:1.25}
+.body{font-size:clamp(16px,1.6vw,26px);line-height:1.45;color:var(--c-text-2)}
+.small{font-size:clamp(13px,1.15vw,19px);line-height:1.45;color:var(--c-text-2)}
+.caption{font-size:clamp(11px,.95vw,15px);font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--olive)}
+.mono{font-family:var(--mono)}
+.mark{background:linear-gradient(transparent 58%,var(--butter) 58%);padding:0 .08em}
+.slide.dark .mark{background:none;color:var(--butter)}
+.stack>*+*{margin-top:2.4vh}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:3vw}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:2vw}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.6vw}
+.card{background:var(--c-card);border:1px solid var(--c-border);border-radius:18px;padding:2.6vh 1.8vw}
+.slide.dark .card{background:rgba(248,245,231,.08);border-color:rgba(248,245,231,.18)}
+.card.butter{background:var(--butter);border-color:transparent}
+.card.sage{background:var(--sage);border-color:transparent}
+.metric{font-family:var(--serif);font-weight:900;font-size:clamp(34px,4.4vw,72px);line-height:1;color:var(--olive);letter-spacing:-.02em}
+.slide.dark .metric{color:var(--butter)}
+.src{font-size:clamp(10px,.8vw,13px);color:var(--c-muted);margin-top:1vh}
+.slide.dark .src{color:rgba(248,245,231,.55)}
+.foot{position:absolute;left:7vw;right:7vw;bottom:3.5vh;display:flex;justify-content:space-between;font-size:12px;color:var(--c-muted);letter-spacing:.1em}
+.slide.dark .foot{color:rgba(248,245,231,.5)}
+.chip{display:inline-block;padding:.45em 1em;border-radius:999px;background:var(--sage);font-size:clamp(12px,1vw,16px);font-weight:500;margin:0 .4em .6em 0}
+.chip.y{background:var(--butter)}
+.news{border-left:4px solid var(--butter);padding:1.2vh 1.2vw;background:var(--c-card);border-radius:0 12px 12px 0}
+.news .h3{font-size:clamp(16px,1.45vw,23px)}
+.news .who{font-size:clamp(10px,.85vw,13px);letter-spacing:.14em;text-transform:uppercase;color:var(--olive);font-weight:600;margin-bottom:.6vh}
+.bar{height:clamp(22px,3vh,34px);border-radius:8px;display:flex;align-items:center;padding-left:10px;font-size:clamp(11px,.9vw,15px);font-weight:600}
+.row{display:grid;grid-template-columns:9vw 1fr;align-items:center;gap:1vw;margin-bottom:1.2vh}
+table{width:100%;border-collapse:collapse;font-size:clamp(13px,1.15vw,19px)}
+th,td{padding:1.3vh .8vw;text-align:left;border-bottom:1px solid var(--c-border)}
+th{font-size:clamp(10px,.85vw,13px);letter-spacing:.14em;text-transform:uppercase;color:var(--c-muted);font-weight:600}
+td.y{color:var(--olive);font-weight:700}
+.banner{width:100%;max-height:34vh;object-fit:cover;border-radius:18px;border:1px solid var(--c-border)}
+.flow{display:flex;align-items:stretch;gap:.8vw}
+.flow .card{flex:1;text-align:center}
+.flow .arrow{align-self:center;font-family:var(--serif);font-size:2vw;color:var(--moss)}
+.notes{position:fixed;bottom:0;left:0;right:0;max-height:32vh;overflow:auto;background:var(--charcoal);color:var(--cream);padding:18px 7vw;font-size:15px;line-height:1.55;display:none;z-index:20}
+.notes.show{display:block}
+.notes b{color:var(--butter)}
+.nav{position:fixed;right:20px;bottom:16px;z-index:30;font:12px var(--mono);color:var(--c-muted)}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--butter);z-index:30;transition:width .4s}
+@media (max-width:760px){
+  .slide{padding:5vh 16px;justify-content:flex-start;overflow-y:auto;pointer-events:none}
+  .slide.active{pointer-events:auto}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;gap:12px}
+  .flow{flex-direction:column}.flow .arrow{transform:rotate(90deg)}
+  .row{grid-template-columns:80px 1fr}
+  .foot{display:none}
+}
+@media print{html,body{overflow:visible;height:auto}.slide{position:relative;opacity:1;page-break-after:always;height:100vh}.notes,.nav,.progress{display:none}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+<!-- 1. TITLE -->
+<section class="slide active" data-notes="<b>Hook (5s):</b> Prediction markets aren't a crypto thing anymore. They're on CNN, in MLB stadiums and in the midterms. The people arriving don't know what a seed phrase is. tyr is the consumer front door: one fingerprint, every market, a private balance and a limit you can't break.">
+  <div class="stack" style="max-width:68vw">
+    <div class="caption a">tyr · Colosseum Crypto World's Fair · Oct 2026</div>
+    <div class="hero a">The odds left crypto.<br><span class="mark">The UX didn't.</span></div>
+    <div class="body a">tyr is the consumer app for every prediction market. One fingerprint. One private balance. Polymarket, Kalshi, Hyperliquid and Limitless on one screen.</div>
+  </div>
+  <div class="foot"><span>TYR</span><span>01</span></div>
+</section>
+
+<!-- 2. BIGGER THAN CRYPTO -->
+<section class="slide" data-notes="<b>Say:</b> In April Pew measured ~$24B a month across Kalshi and Polymarket, already more than all legal US sportsbooks. By September Kalshi alone printed a ~$60B notional month. And crypto questions are a rounding error: 7% of Kalshi volume. <b>Caveat if asked:</b> the $60B is DeFi Rate's notional count ($1/contract); dollars-paid is lower (~$16B for 30 days).">
+  <div class="stack">
+    <div class="caption a">1 · Bigger than crypto</div>
+    <div class="h1 a">This is a mainstream market now.</div>
+    <div class="grid-4 a">
+      <div class="card"><div class="metric">$24B</div><div class="small">a month on Kalshi + Polymarket (Apr 2026), up ~5× in 7 months</div></div>
+      <div class="card"><div class="metric">&gt;$14B</div><div class="small">beats the monthly handle of every legal US sportsbook combined</div></div>
+      <div class="card butter"><div class="metric" style="color:var(--charcoal)">~$60B</div><div class="small" style="color:var(--charcoal)">Kalshi notional volume in Sept 2026 alone, a monthly record</div></div>
+      <div class="card"><div class="metric">7%</div><div class="small">of Kalshi volume is crypto. 20% on Polymarket.</div></div>
+    </div>
+    <div class="src a">Pew Research (May 27, 2026) · Prediction News / DeFi Rate (Oct 2026, notional basis)</div>
+  </div>
+  <div class="foot"><span>TYR</span><span>02</span></div>
+</section>
+
+<!-- 3. WHAT PEOPLE BET ON -->
+<section class="slide" data-notes="<b>Say:</b> Look at what's actually traded. Sports, politics, macro. These are fans, voters and people who watch the Fed. Not crypto natives.">
+  <div class="stack">
+    <div class="caption a">What people actually trade</div>
+    <div class="h1 a">Sports, politics, the Fed. <span class="mark">Not tokens.</span></div>
+    <div class="grid-2 a" style="margin-top:4vh">
+      <div>
+        <div class="h3" style="margin-bottom:2vh">Kalshi</div>
+        <div class="row"><span class="small">Sports</span><div class="bar" style="width:80%;background:var(--olive);color:var(--cream)">80%</div></div>
+        <div class="row"><span class="small">Crypto</span><div class="bar" style="width:7%;min-width:48px;background:var(--butter)">7%</div></div>
+      </div>
+      <div>
+        <div class="h3" style="margin-bottom:2vh">Polymarket</div>
+        <div class="row"><span class="small">Sports</span><div class="bar" style="width:39%;background:var(--olive);color:var(--cream)">39%</div></div>
+        <div class="row"><span class="small">Politics</span><div class="bar" style="width:32%;background:var(--moss);color:var(--cream)">32%</div></div>
+        <div class="row"><span class="small">Crypto</span><div class="bar" style="width:20%;background:var(--butter)">20%</div></div>
+      </div>
+    </div>
+    <div class="src a">Share of volume, July 2024 – April 2026 · Pew Research</div>
+  </div>
+  <div class="foot"><span>TYR</span><span>03</span></div>
+</section>
+
+<!-- 4. POLITICS -->
+<section class="slide" data-notes="<b>Say:</b> This week alone: CNN, The Intercept and WBUR all ran stories on prediction markets and the midterms. Odds are now part of how people read an election. <b>Don't overclaim:</b> research (NBER, Zitzewitz) finds no systematic partisan tilt in prices. Our point is reach, not manipulation.">
+  <div class="stack">
+    <div class="caption a">2 · Into politics</div>
+    <div class="h1 a">The midterms have a ticker.</div>
+    <div class="grid-3 a">
+      <div class="news"><div class="who">Yahoo Finance · Oct 2026</div><div class="h3">$2B in US election trades on Kalshi + Polymarket so far this year</div></div>
+      <div class="news"><div class="who">CNN · Oct 9, 2026</div><div class="h3">$20M+ on "knowable" midterm markets: endorsements, rallies, debate mentions</div></div>
+      <div class="news"><div class="who">Baltimore Sun · Oct 9, 2026</div><div class="h3">Prediction markets face their first major election test</div></div>
+    </div>
+    <div class="card sage a"><div class="body" style="color:var(--charcoal)">Kalshi execs say election volume is growing <b>faster than football</b>. Washington is now writing the rules: the CFTC opened a broader event-contract rulemaking.</div></div>
+  </div>
+  <div class="foot"><span>TYR</span><span>04</span></div>
+</section>
+
+<!-- 5. CULTURE -->
+<section class="slide" data-notes="<b>Say:</b> Odds are on cable news via Kalshi's CNN and CNBC data deals. Polymarket is the official partner of MLB, plus NHL and MLS. LeBron teased a Polymarket deal in September. The NBA commissioner said on Oct 9 the league wants the data. This is culture, and Wall Street priced it: ICE's $2B into Polymarket, Kalshi at $22B.">
+  <div class="stack">
+    <div class="caption a">3 · Into culture</div>
+    <div class="h1 a">Odds are the new <span class="mark">scoreboard.</span></div>
+    <div class="grid-2 a">
+      <div class="card">
+        <div class="caption" style="margin-bottom:1.4vh">Screens</div>
+        <div class="h3">Kalshi probabilities run live on CNN and CNBC broadcasts</div>
+        <div class="src">CNBC (discloses a commercial tie and minority stake in Kalshi)</div>
+      </div>
+      <div class="card">
+        <div class="caption" style="margin-bottom:1.4vh">Stadiums</div>
+        <div class="h3">MLB, NHL, MLS partner with Polymarket. LeBron teases a deal. NBA wants the data.</div>
+        <div class="src">CNBC Mar 19 · Sep 5 · Oct 9, 2026</div>
+      </div>
+    </div>
+    <div class="a">
+      <span class="chip y">ICE: up to $2B into Polymarket</span>
+      <span class="chip">Kalshi valued at $22B</span>
+      <span class="chip">Polymarket valued at $15B</span>
+      <span class="chip">~$188B volume in Q3 2026</span>
+    </div>
+  </div>
+  <div class="foot"><span>TYR</span><span>05</span></div>
+</section>
+
+<!-- 6. PROBLEM -->
+<section class="slide dark" data-notes="<b>Say:</b> So the audience changed. The product didn't. A sports fan who saw odds on TV hits a wall: wallets, chains, gas, a public record of every bet, five apps for one question, and nothing that stops them losing more than they meant to. <b>Objection prep:</b> 'Kalshi already has a nice app.' Yes, for Kalshi. You still can't see Polymarket's price next to it, and your activity is visible or KYC-siloed.">
+  <div class="stack" style="max-width:76vw">
+    <div class="caption a">The problem</div>
+    <div class="h1 a">Mainstream demand. <span class="mark">Crypto-native UX.</span></div>
+    <div class="grid-2 a" style="margin-top:3vh">
+      <div class="card"><div class="h3">Wallets, gas, chain pickers</div><div class="small">The fan from the broadcast quits at "install a wallet".</div></div>
+      <div class="card"><div class="h3">Every bet is public</div><div class="small">Your bankroll and positions, readable by anyone with your address.</div></div>
+      <div class="card"><div class="h3">Same question, five apps</div><div class="small">Liquidity is split. Nobody shows you the best price.</div></div>
+      <div class="card"><div class="h3">No real brake</div><div class="small">"Are you sure?" pop-ups. Agents with full keys.</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>TYR</span><span>06</span></div>
+</section>
+
+<!-- 7. SOLUTION -->
+<section class="slide" data-notes="<b>Say:</b> Think brokerage account, but for every prediction market. Fingerprint in, fund from anywhere, one list of questions with every venue's price, one tap. Three things no other account does: hidden balance, a limit the chain enforces, an agent with a budget instead of your keys.">
+  <div class="stack">
+    <div class="caption a">The solution</div>
+    <div class="h1 a">One account for every market.</div>
+    <img class="banner a" src="apps/web/public/brand/Banner.png" alt="tyr banner">
+    <div class="grid-3 a">
+      <div class="card butter"><div class="h3">No one sees your money</div><div class="small" style="color:var(--charcoal)">Encrypted balance. Explorer sees an account, not an amount.</div></div>
+      <div class="card sage"><div class="h3">Your limit is law</div><div class="small" style="color:var(--charcoal)">Set $50/day once. Over the line is blocked, not warned.</div></div>
+      <div class="card"><div class="h3">Agents get a budget</div><div class="small">Not your keys. It can't spend a cent past the cap.</div></div>
+    </div>
+  </div>
+  <div class="foot"><span>TYR</span><span>07</span></div>
+</section>
+
+<!-- 8. UX FLOW -->
+<section class="slide" data-notes="<b>Say:</b> This is the whole UX. Four steps, zero crypto words on screen. Then go to the demo. <b>Demo order:</b> fingerprint sign-up, $20/day limit, shielded ZEC memo bet, Solana explorer shows encrypted amount, multi-venue router split, payout receipt, over-limit bet blocked.">
+  <div class="stack">
+    <div class="caption a">The UX</div>
+    <div class="h1 a">Four taps. <span class="mark">Zero crypto words.</span></div>
+    <div class="flow a">
+      <div class="card"><div class="metric">1</div><div class="h3">Touch ID</div><div class="small">No seed phrase, no gas</div></div>
+      <div class="arrow">→</div>
+      <div class="card"><div class="metric">2</div><div class="h3">Set a limit</div><div class="small">$20/day, enforced on-chain</div></div>
+      <div class="arrow">→</div>
+      <div class="card"><div class="metric">3</div><div class="h3">Fund</div><div class="small">From any chain, or private ZEC</div></div>
+      <div class="arrow">→</div>
+      <div class="card butter"><div class="metric" style="color:var(--charcoal)">4</div><div class="h3">Bet</div><div class="small" style="color:var(--charcoal)">Best price across every venue</div></div>
+    </div>
+    <div class="body a">Live demo · 90 seconds</div>
+  </div>
+  <div class="foot"><span>TYR</span><span>08</span></div>
+</section>
+
+<!-- 9. ROUTER -->
+<section class="slide" data-notes="<b>Say:</b> The router ranks by all-in price, quote plus fee. Kalshi quotes lower here but Polymarket fills cheaper. Users never think about this. <b>Honesty:</b> Hyperliquid is live; Polymarket, Kalshi and Limitless are simulated adapters behind the same interface, labeled on screen.">
+  <div class="stack">
+    <div class="caption a">Best price, automatically</div>
+    <div class="h1 a">The cheapest quote isn't the cheapest fill.</div>
+    <table class="a">
+      <tr><th>Venue</th><th>Quote</th><th>Fee on 100 YES</th><th>All-in</th></tr>
+      <tr><td>Kalshi</td><td class="mono">$0.60</td><td class="mono">$1.68</td><td class="mono">$61.68</td></tr>
+      <tr><td>Polymarket</td><td class="mono">$0.61</td><td class="mono">$0.00</td><td class="mono y">$61.00 ✓</td></tr>
+    </table>
+    <div class="small a">Illustrative. Large orders split across venues slice by slice. Hyperliquid live; other venues simulated in the demo.</div>
+  </div>
+  <div class="foot"><span>TYR</span><span>09</span></div>
+</section>
+
+<!-- 10. WHY CRYPTO -->
+<section class="slide" data-notes="<b>Rip-out test:</b> remove the chains and you lose the three promises. A web2 app can hide your balance from the public but not from itself; can show a limit but not guarantee it against its own backend; can't give an agent a hard budget. <b>Say:</b> every chain does one job only it can do.">
+  <div class="stack">
+    <div class="caption a">Why it needs crypto</div>
+    <div class="h1 a">Rip out the chains and the promises break.</div>
+    <table class="a">
+      <tr><th>Promise</th><th>Made true by</th></tr>
+      <tr><td>Fingerprint login, no gas, hard limits, receipts</td><td>Tempo passkeys + MPP spend-limited sessions</td></tr>
+      <tr><td>Hidden bankroll</td><td>Solana Confidential Balances</td></tr>
+      <tr><td>The payment is the order</td><td>Zcash shielded memos</td></tr>
+      <tr><td>Every market, best price</td><td>Hyperliquid HIP-4 builder codes + venue adapters</td></tr>
+      <tr><td>Bet and hedge a Fed decision</td><td>Robinhood Chain Stock Tokens (testnet, geofenced)</td></tr>
+    </table>
+  </div>
+  <div class="foot"><span>TYR</span><span>10</span></div>
+</section>
+
+<!-- 11. BUSINESS -->
+<section class="slide" data-notes="<b>Say:</b> We earn a routing fee on every venue we send volume to. Revenue scales with total market volume, not any one venue's share. Every new adapter is more liquidity for users and another revenue line. <b>Illustrative only:</b> 0.1% of 1% of Q3's ~$188B is ~$1.9M a quarter. Mark as assumption.">
+  <div class="stack">
+    <div class="caption a">Business model</div>
+    <div class="h1 a">A fee on every venue we route to.</div>
+    <div class="grid-4 a">
+      <div class="card"><div class="h3">Hyperliquid</div><div class="small">Builder-code fee per trade</div></div>
+      <div class="card"><div class="h3">Polymarket</div><div class="small">Builder attribution</div></div>
+      <div class="card"><div class="h3">Kalshi · Limitless</div><div class="small">Referral / routing fees</div></div>
+      <div class="card"><div class="h3">Agent API</div><div class="small">Paid per call over MPP</div></div>
+    </div>
+    <div class="card sage a"><div class="body" style="color:var(--charcoal)">We grow with the <b>whole category</b>, not one venue's market share. The more mainstream it gets, the more UX is worth.</div></div>
+  </div>
+  <div class="foot"><span>TYR</span><span>11</span></div>
+</section>
+
+<!-- 12. CLOSE -->
+<section class="slide dark" data-notes="<b>Close:</b> Prediction markets are on the news, in stadiums and in the midterms. The next 100 million users won't learn crypto. tyr is how they'll use it. Ask: Grand Champion + Solana, Tempo, Hyperliquid, Zcash and Robinhood Chain tracks. <b>TBD:</b> live demo link, video link, X handle.">
+  <div class="stack" style="max-width:70vw">
+    <div class="caption a">The ask</div>
+    <div class="hero a">The next 100M users <span class="mark">won't learn crypto.</span></div>
+    <div class="body a">tyr is how they'll trade the odds anyway. Open source, testnet live, built for the Crypto World's Fair.</div>
+    <div class="a"><span class="chip y">Demo: TBD</span><span class="chip">Video: TBD</span><span class="chip">X: TBD</span></div>
+  </div>
+  <div class="foot"><span>TYR</span><span>12</span></div>
+</section>
+
+</div>
+<div class="notes" id="notes"></div>
+<div class="nav" id="nav"></div>
+<script>
+const slides=[...document.querySelectorAll('.slide')],notes=document.getElementById('notes'),nav=document.getElementById('nav'),prog=document.getElementById('progress');
+let i=0;
+function show(n){i=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,k)=>s.classList.toggle('active',k===i));notes.innerHTML=slides[i].dataset.notes||'';nav.textContent=(i+1)+' / '+slides.length+' · N notes';prog.style.width=((i+1)/slides.length*100)+'%';}
+document.addEventListener('keydown',e=>{if(['ArrowRight',' ','PageDown'].includes(e.key))show(i+1);else if(['ArrowLeft','PageUp'].includes(e.key))show(i-1);else if(e.key==='n'||e.key==='N')notes.classList.toggle('show');});
+let tx=null;document.addEventListener('touchstart',e=>tx=e.touches[0].clientX);document.addEventListener('touchend',e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)show(i+(d<0?1:-1));tx=null;});
+document.addEventListener('click',e=>{if(e.target.closest('.notes'))return;show(i+(e.clientX>innerWidth/2?1:-1));});
+show(0);
+</script>
+</body>
+</html>
