@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   title: "Tyr — Private prediction markets",
   description:
     "Bet on anything, from any chain, with a hidden bankroll and a loss limit you can't break.",
-  icons: { icon: "/brand/logo-nobg.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
