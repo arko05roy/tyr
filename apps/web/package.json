@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:dashboard": "NEXT_PUBLIC_TYR_SURFACE=dashboard next dev -p 3001",
+    "dev:all": "concurrently -n onboard,dashboard -c cyan,yellow \"pnpm dev\" \"pnpm dev:dashboard\""
   },
   "dependencies": {
     "@simplewebauthn/browser": "^14.0.0",
@@ -27,6 +29,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.5",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",

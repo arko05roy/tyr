@@ -7,6 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "pnpm db:up && concurrently -n web,dash,api,indexer,settle,fund,zcash -c cyan,red,green,yellow,magenta,blue,gray \"pnpm --filter web dev\" \"pnpm --filter web dev:dashboard\" \"pnpm --filter @tyr/api dev\" \"pnpm --filter @tyr/workers tempo-indexer\" \"pnpm --filter @tyr/workers settlement\" \"pnpm --filter @tyr/workers funding\" \"pnpm --filter @tyr/workers zcash\"",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@types/node": "^22.10.0",
+    "concurrently": "^9.2.5",
     "dotenv": "^16.6.1",
     "eslint": "^9.17.0",
     "husky": "^9.1.7",
@@ -34,7 +36,7 @@
     "*.{ts,tsx,js,mjs,json,md,yaml,yml}": "prettier --write"
   },
   "dependencies": {
-    "@tyr/solana": "workspace:*",
-    "@tyr/evm-deposits": "workspace:*"
+    "@tyr/evm-deposits": "workspace:*",
+    "@tyr/solana": "workspace:*"
   }
 }

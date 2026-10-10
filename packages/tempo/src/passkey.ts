@@ -11,13 +11,18 @@ import { convertCOSEtoPKCS, isoBase64URL } from '@simplewebauthn/server/helpers'
 import type { PrismaClient } from '@tyr/db';
 import { getAddress, keccak256, toHex, type Address, type Hex } from 'viem';
 
-export type RelyingParty = { rpId: string; rpName: string; origin: string };
+export type RelyingParty = { rpId: string; rpName: string; origin: string; origins: string[] };
 
 export function relyingParty(): RelyingParty {
+  // Comma-separated: the onboarding app (:3000) and the dashboard app (:3001) both sign in.
+  const origins = (process.env.WEBAUTHN_ORIGIN ?? 'http://localhost:3000,http://localhost:3001')
+    .split(',')
+    .map((o) => o.trim());
   return {
     rpId: process.env.WEBAUTHN_RP_ID ?? 'localhost',
     rpName: 'tyr.bet',
-    origin: process.env.WEBAUTHN_ORIGIN ?? 'http://localhost:3000',
+    origin: origins[0]!,
+    origins,
   };
 }
 
@@ -72,7 +77,7 @@ export async function verifyRegistration(
   const v = await verifyRegistrationResponse({
     response,
     expectedChallenge: challenge,
-    expectedOrigin: rp.origin,
+    expectedOrigin: rp.origins,
     expectedRPID: rp.rpId,
     requireUserVerification: true,
   });
@@ -108,7 +113,7 @@ export async function verifyLogin(
   const v = await verifyAuthenticationResponse({
     response,
     expectedChallenge: challenge,
-    expectedOrigin: rp.origin,
+    expectedOrigin: rp.origins,
     expectedRPID: rp.rpId,
     requireUserVerification: true,
     credential: {

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { signIn, signUp } from "../../_app/passkey";
+import { isDashboard } from "../../_app/surface";
 import { ErrorNote } from "../../_app/ui";
 
 function Start() {
@@ -14,7 +15,7 @@ function Start() {
     router.replace(to);
   };
   const create = useMutation({ mutationFn: signUp, onSuccess: () => done("/onboarding/limit") });
-  const login = useMutation({ mutationFn: signIn, onSuccess: () => done(next ?? "/markets") });
+  const login = useMutation({ mutationFn: signIn, onSuccess: () => done(next ?? (isDashboard ? "/portfolio" : "/fund")) });
   const busy = create.isPending || login.isPending;
 
   return (

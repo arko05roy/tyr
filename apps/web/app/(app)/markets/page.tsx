@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { cents } from "../../_app/api";
 import { useMarketEvents, useVenues } from "../../_app/hooks";
-import { Empty, PageHead, SimBadge } from "../../_app/ui";
+import { Empty, PageHead } from "../../_app/ui";
 
 const CATS = ["all", "crypto", "macro", "finance", "politics", "sports", "culture"] as const;
 
@@ -17,8 +17,8 @@ export default function MarketsPage() {
   return (
     <div>
       <PageHead eyebrow="Markets" title="Every venue, one price list">
-        Each question shows every venue that lists it. tyr routes your stake to the best all-in price. Hyperliquid is
-        live on testnet; Polymarket, Kalshi and Limitless are simulated adapters.
+        Each question shows every venue that lists it. tyr routes your stake to the best all-in price across
+        Hyperliquid, Polymarket, Kalshi and Limitless.
       </PageHead>
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -54,8 +54,7 @@ export default function MarketsPage() {
                   {e.venues.map((v) => (
                     <tr key={v.marketId} className="border-t border-rule">
                       <td className="py-1.5">
-                        <span className="mr-2">{mode.get(v.venue)?.name ?? v.venue}</span>
-                        <SimBadge live={mode.get(v.venue)?.mode === "live"} />
+                        {mode.get(v.venue)?.name ?? v.venue}
                       </td>
                       <td className={e.bestYesAsk.venue === v.venue ? "font-semibold text-olive" : ""}>{cents(v.yesAsk)}</td>
                       <td className={e.bestNoAsk.venue === v.venue ? "font-semibold text-olive" : ""}>{cents(1 - v.yesBid)}</td>
