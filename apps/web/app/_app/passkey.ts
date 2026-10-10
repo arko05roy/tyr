@@ -33,6 +33,11 @@ type Grant = {
  * Returns the tx hash once mined — the API then re-checks it on-chain.
  */
 export async function authorizeAccessKey(grant: Grant): Promise<`0x${string}`> {
+  // Mock API (no backend): nothing on-chain to authorize, hand back a fake tx hash.
+  if (process.env.NEXT_PUBLIC_TYR_MOCK) {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    return `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")}`;
+  }
   const me = await ok(api.GET("/api/auth/me"));
   const account = Account.fromWebAuthnP256(
     { id: me.passkey.credentialId, publicKey: me.passkey.publicKey as `0x${string}` },

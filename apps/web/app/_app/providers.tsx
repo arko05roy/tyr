@@ -27,6 +27,8 @@ function EventStream({ children }: { children: ReactNode }) {
     let ws: WebSocket | null = null;
     let retry: ReturnType<typeof setTimeout>;
     let closed = false;
+    // The mock API has no event stream.
+    if (process.env.NEXT_PUBLIC_TYR_MOCK) return;
     const connect = () => {
       ws = new WebSocket(wsEndpoint());
       ws.onmessage = (m) => {

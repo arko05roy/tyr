@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 
 // The browser only ever talks to this origin; /api/* is proxied to the Fastify API so the
 // tyr_session cookie and the WebAuthn origin stay first-party.
-const API_URL = process.env.TYR_API_URL ?? "http://localhost:4000";
+// With no TYR_API_URL in a production build (e.g. Vercel), app/api/[...path] serves a mock API.
+const API_URL =
+  process.env.TYR_API_URL ?? (process.env.NODE_ENV === "production" ? undefined : "http://localhost:4000");
+const MOCK = !API_URL;
 
 // One codebase, two servers. "onboard" (:3000) is the landing, passkey sign-up, loss limit and
 // deposit; "dashboard" (:3001) is the signed-in product: portfolio, markets, Zcash and agents.
@@ -26,6 +29,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_TYR_SURFACE: SURFACE,
     NEXT_PUBLIC_TYR_ONBOARD_URL: ONBOARD_URL,
     NEXT_PUBLIC_TYR_DASHBOARD_URL: DASHBOARD_URL,
+    NEXT_PUBLIC_TYR_MOCK: MOCK ? "1" : "",
   },
   redirects: async () =>
     SURFACE === "dashboard"
@@ -34,7 +38,12 @@ const nextConfig: NextConfig = {
           ...ONBOARD_PATHS.map((source) => ({ source, destination: `${ONBOARD_URL}${source}`, permanent: false })),
         ]
       : DASHBOARD_PATHS.map((source) => ({ source, destination: `${DASHBOARD_URL}${source}`, permanent: false })),
-  rewrites: async () => [{ source: "/api/:path*", destination: `${API_URL}/api/:path*` }],
+  // beforeFiles so the real API wins over the mock route handler when it is configured.
+  rewrites: async () => ({
+    beforeFiles: MOCK ? [] : [{ source: "/api/:path*", destination: `${API_URL}/api/:path*` }],
+    afterFiles: [],
+    fallback: [],
+  }),
 };
 
 export default nextConfig;
