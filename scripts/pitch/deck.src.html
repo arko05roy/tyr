@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tyr pitch deck</title>
+<link rel="icon" href="{{tyr}}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F8F5E7; --butter:#F3D757; --sage:#D6E2B4; --moss:#8FA671; --olive:#4C6B46; --deep:#2F4630; --charcoal:#2B2B2B; --red:#C8452F;
+  --card:#FFFDF3; --border:rgba(43,43,43,.12); --text:var(--charcoal); --text-2:rgba(43,43,43,.68); --muted:rgba(43,43,43,.45);
+  --sol:linear-gradient(90deg,#9945FF,#14F195);
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--cream);color:var(--text);font-family:var(--sans)}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6vh 6vw 8vh;opacity:0;pointer-events:none;transition:opacity .55s cubic-bezier(.16,1,.3,1);background:var(--cream)}
+.slide.active{opacity:1;pointer-events:auto}
+.slide.dark{background:var(--deep);color:var(--cream)}
+.slide.dark .body,.slide.dark .small{color:rgba(248,245,231,.75)}
+.slide.dark .caption{color:var(--butter)}
+.slide.active .a{animation:up .7s cubic-bezier(.16,1,.3,1) both}
+.slide.active .d1{animation-delay:.08s}.slide.active .d2{animation-delay:.16s}.slide.active .d3{animation-delay:.26s}.slide.active .d4{animation-delay:.36s}.slide.active .d5{animation-delay:.48s}.slide.active .d6{animation-delay:.6s}.slide.active .d7{animation-delay:.72s}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.hero{font-family:var(--serif);font-weight:900;font-size:clamp(40px,6.4vw,104px);line-height:1.02;letter-spacing:-.025em}
+.h1{font-family:var(--serif);font-weight:700;font-size:clamp(30px,3.9vw,62px);line-height:1.06;letter-spacing:-.02em}
+.h3{font-family:var(--serif);font-weight:700;font-size:clamp(16px,1.45vw,24px);line-height:1.2}
+.body{font-size:clamp(15px,1.4vw,23px);line-height:1.45;color:var(--text-2)}
+.small{font-size:clamp(12px,1vw,16px);line-height:1.45;color:var(--text-2)}
+.caption{font-size:clamp(11px,.85vw,14px);font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--olive);margin-bottom:2vh}
+.mark{background:linear-gradient(transparent 60%,var(--butter) 60%);padding:0 .06em}
+.slide.dark .mark{background:none;color:var(--butter)}
+.strike{position:relative;color:var(--muted)}
+.strike::after{content:"";position:absolute;left:-2%;right:-2%;top:54%;height:.09em;background:var(--red);transform:rotate(-2deg)}
+.mt{margin-top:2.4vh}.mt2{margin-top:4.4vh}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:2.4vh 1.5vw}
+.slide.dark .card{background:rgba(248,245,231,.07);border-color:rgba(248,245,231,.16)}
+.src{font-size:clamp(10px,.72vw,12px);color:var(--muted);margin-top:1.8vh}
+.slide.dark .src{color:rgba(248,245,231,.45)}
+.foot{position:absolute;left:6vw;bottom:3.4vh;font:12px var(--mono);color:var(--muted);letter-spacing:.08em;display:flex;align-items:center}
+.slide.dark .foot{color:rgba(248,245,231,.45)}
+.foot img{height:22px;margin-right:8px}
+/* logos */
+.logo{width:48px;height:48px;border-radius:22%;object-fit:cover;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.08);background:#fff}
+.logo.t{object-fit:contain;padding:4px}
+.logo.dk{background:#0F1A1A;object-fit:contain;padding:5px}
+.logo.sol{background:#111;display:inline-flex;align-items:center;justify-content:center}
+.logo.sol svg{width:58%;height:58%}
+.sm{width:30px;height:30px;border-radius:8px}
+.xs{width:22px;height:22px;border-radius:6px}
+.strip{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.title-logo{width:clamp(80px,8vw,140px);margin-bottom:3vh}
+/* slide 3: market */
+.statement{font-family:var(--serif);font-weight:900;font-size:clamp(40px,5.8vw,96px);line-height:1.04;letter-spacing:-.03em}
+.statement .hl{background:var(--butter);color:var(--deep);padding:0 .14em;border-radius:.12em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.mkt{display:grid;grid-template-columns:1.25fr 1fr;gap:1.6vw;margin-top:4vh}
+.chart{display:flex;flex-direction:column;gap:1.3vh}
+.brow{display:grid;grid-template-columns:11vw 1fr;align-items:center;gap:1vw;font-size:clamp(11px,.9vw,15px)}
+.brow .lbl{color:rgba(248,245,231,.75)}
+.btrack{height:clamp(22px,3.2vh,34px);border-radius:8px;background:rgba(248,245,231,.06);overflow:hidden}
+.bfill{height:100%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font:700 clamp(11px,.9vw,15px) var(--mono);color:var(--deep);background:var(--butter);transform-origin:left;animation:grow 1.1s cubic-bezier(.16,1,.3,1) both}
+.bfill.s{background:var(--sage)}
+.bfill.m{background:rgba(248,245,231,.25);color:var(--cream)}
+@keyframes grow{from{transform:scaleX(0)}to{transform:none}}
+.chart .ttl{font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--butter);margin-top:1vh}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:1vw}
+.metrics .card{padding:2vh 1.2vw}
+.big{font-family:var(--serif);font-weight:900;font-size:clamp(28px,3vw,50px);line-height:1;color:var(--butter);letter-spacing:-.02em}
+/* slide 4: door */
+.door{display:grid;grid-template-columns:1fr 1.55fr .95fr;gap:1.6vw;align-items:stretch;margin-top:4vh}
+.headline{background:var(--card);border:1px solid var(--border);border-left:5px solid var(--butter);border-radius:0 18px 18px 0;padding:2.4vh 1.4vw;display:flex;flex-direction:column;justify-content:center}
+.headline .who{display:flex;align-items:center;gap:.6em;font-size:clamp(10px,.8vw,13px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--olive);margin-bottom:1.2vh}
+.wall{display:flex;flex-direction:column;gap:.8vh;counter-reset:s}
+.wall div{counter-increment:s;background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.05vh 1vw;font-size:clamp(12px,1vw,16px);font-weight:600;display:grid;grid-template-columns:2.2em 1fr auto;align-items:center;gap:.6vw}
+.wall div::before{content:counter(s,decimal-leading-zero);font:700 .8em var(--mono);color:var(--muted)}
+.wall div span{font:500 .78em var(--mono);color:var(--red);white-space:nowrap}
+.wall div:nth-child(4){border-color:rgba(200,69,47,.25)}.wall div:nth-child(5){border-color:rgba(200,69,47,.4);background:#FFF6F3}.wall div:nth-child(6){border-color:rgba(200,69,47,.6);background:#FDEDE8}
+.closed{border:2px dashed rgba(200,69,47,.55);border-radius:20px;padding:3vh 1.2vw;color:var(--red);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:1vh}
+.closed svg{width:clamp(36px,3.4vw,56px);height:auto}
+.closed .h1{font-size:clamp(26px,2.6vw,42px);color:var(--red)}
+/* slide 5: wall of venues */
+.galaxy{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:1fr;gap:1vw;margin-top:4vh}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:2vh .9vw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;text-align:center}
+.tile .logo{width:clamp(40px,3.6vw,60px);height:clamp(40px,3.6vw,60px)}
+.tile b{font-family:var(--serif);font-size:clamp(14px,1.15vw,19px)}
+.tile i{font-style:normal;font:500 clamp(9px,.7vw,11px) var(--mono);color:var(--muted);letter-spacing:.06em}
+.tile.home{grid-column:span 2;grid-row:span 2;background:#111;color:#fff;border:none;position:relative;overflow:hidden;align-items:flex-start;text-align:left;justify-content:flex-end;padding:3vh 1.6vw}
+.tile.home::before{content:"";position:absolute;inset:auto -20% -40% -20%;height:70%;background:var(--sol);opacity:.4;filter:blur(60px)}
+.tile.home>*{position:relative}
+.tile.home .logo{width:clamp(56px,5vw,84px);height:clamp(56px,5vw,84px)}
+.tile.home i{color:rgba(255,255,255,.65);line-height:1.5}
+.tile.home .tag{font:700 11px var(--mono);letter-spacing:.14em;padding:.45em .9em;border-radius:999px;background:var(--sol);color:#111;position:absolute;top:2.4vh;left:1.6vw}
+.tile.more{grid-column:span 3;background:var(--deep);color:var(--cream);border:none;flex-direction:row;justify-content:space-between;text-align:left;padding:2vh 1.6vw;gap:1.4vw;flex-wrap:wrap}
+.tile.more .plus{font-family:var(--serif);font-weight:900;font-size:clamp(26px,2.6vw,44px);color:var(--butter);line-height:1}
+.tile.more i{color:rgba(248,245,231,.7);font-size:clamp(10px,.8vw,13px)}
+.chains{display:flex;gap:.5vw;align-items:center}
+.chains .logo{width:clamp(28px,2.4vw,40px);height:clamp(28px,2.4vw,40px);border-radius:10px}
+.chains .etc{font:700 18px var(--mono);color:var(--butter)}
+.feed{display:grid;grid-template-columns:1fr 6vw auto;align-items:center;margin-top:3.6vh}
+.feed .galaxy{grid-template-columns:repeat(6,1fr)}
+.funnel{width:100%;height:100%;overflow:visible}
+.funnel path{fill:none;stroke:var(--moss);stroke-width:2;vector-effect:non-scaling-stroke;stroke-dasharray:6 6;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-24}}
+.hubtyr{background:var(--deep);color:var(--cream);border-radius:24px;padding:3.6vh 1.8vw;text-align:center;box-shadow:0 24px 60px -20px rgba(47,70,48,.7);border:2px solid var(--butter)}
+.hubtyr img{width:clamp(72px,7vw,120px);display:block;margin:0 auto 1.4vh}
+.hubtyr .h3{font-size:clamp(22px,2vw,34px)}
+.hubtyr .small{color:rgba(248,245,231,.75);margin-top:.8vh}
+/* slide 6: architecture */
+.arch{display:grid;grid-template-columns:.8fr auto 2.3fr auto 1fr;gap:1.2vw;align-items:center;margin-top:3.4vh}
+.arrow{font-family:var(--serif);font-size:2vw;color:var(--moss)}
+.you{background:var(--card);color:var(--charcoal);border-radius:18px;padding:2.6vh 1.2vw}
+.slide.dark .you .small{color:var(--text-2)}
+.stack{background:rgba(248,245,231,.05);border:1px solid rgba(243,215,87,.45);border-radius:22px;padding:1.8vh 1.2vw;display:flex;flex-direction:column;gap:.9vh}
+.stack .hd{display:flex;align-items:center;gap:.8vw;margin-bottom:.4vh}
+.stack .hd img{width:36px}
+.layer{display:grid;grid-template-columns:auto 9vw 1fr;align-items:center;gap:.8vw;background:rgba(248,245,231,.06);border-radius:12px;padding:1vh .8vw}
+.layer .who{font:700 clamp(10px,.8vw,13px) var(--mono);color:var(--butter);letter-spacing:.04em}
+.layer .what{font-size:clamp(11px,.92vw,15px);color:rgba(248,245,231,.85);line-height:1.35}
+.layer .what b{color:var(--cream)}
+.outs{display:flex;flex-direction:column;gap:.9vh}
+.outs div{display:flex;align-items:center;gap:.7vw;font-weight:600;font-size:clamp(12px,1vw,16px)}
+.outs .lbl{font:700 10px var(--mono);letter-spacing:.14em;color:var(--butter);margin-bottom:.2vh}
+/* slide 7: solution */
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:1vw;margin-top:3vh}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:2vh 1.2vw;display:flex;flex-direction:column;gap:.9vh}
+.fc .top{display:flex;justify-content:space-between;align-items:center}
+.fc .n{font:700 12px var(--mono);color:var(--olive)}
+.fc .by{display:flex;gap:4px;align-items:center;font:500 10px var(--mono);color:var(--muted)}
+.fc .small{font-size:clamp(11px,.9vw,15px)}
+.fc.key{background:var(--deep);color:var(--cream);border:none}
+.fc.key .n{color:var(--butter)}.fc.key .small{color:rgba(248,245,231,.78)}.fc.key .by{color:rgba(248,245,231,.55)}
+.router{display:grid;grid-template-columns:auto 1fr 1fr;gap:1.2vw;align-items:center;margin-top:1vw;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.6vh 1.4vw}
+.router .q{font:700 11px var(--mono);letter-spacing:.12em;color:var(--olive);text-transform:uppercase}
+.router .v{display:flex;align-items:center;gap:.7vw;font-size:clamp(11px,.92vw,15px)}
+.router .v b{font-family:var(--mono)}
+.router .win{color:var(--olive);font-weight:700}
+.router .lose{color:var(--muted);text-decoration:line-through}
+/* chrome */
+.notes{position:fixed;bottom:0;left:0;right:0;max-height:32vh;overflow:auto;background:var(--charcoal);color:var(--cream);padding:18px 6vw;font-size:15px;line-height:1.55;display:none;z-index:20}
+.notes.show{display:block}.notes b{color:var(--butter)}
+.nav{position:fixed;right:20px;bottom:16px;z-index:30;font:12px var(--mono);color:var(--muted);display:flex;gap:10px;align-items:center}
+.nav button{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font:inherit;color:inherit;cursor:pointer}
+body.on-dark .nav{color:rgba(248,245,231,.6)}body.on-dark .nav button{border-color:rgba(248,245,231,.25)}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--butter);z-index:30;transition:width .4s}
+@media (max-width:760px){
+  .slide{padding:6vh 16px 10vh;justify-content:flex-start;overflow-y:auto}
+  .feed,.mkt,.metrics,.door,.arch,.flow,.router{grid-template-columns:1fr;gap:12px}
+  .galaxy{grid-template-columns:repeat(2,1fr);gap:10px}
+  .brow{grid-template-columns:28vw 1fr}
+  .layer{grid-template-columns:auto 1fr}.layer .what{grid-column:1/-1}
+  .arrow,.funnel{display:none}.foot{display:none}
+}
+@page{size:1600px 900px;margin:0}
+@media print{html,body{overflow:visible;height:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}.slide{position:relative;opacity:1;break-after:page;width:1600px;height:900px;transition:none}.slide .a,.bfill{animation:none!important}.notes,.nav,.progress{display:none}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<!-- 1 · TITLE -->
+<section class="slide dark active" data-notes="<b>Say:</b> This is tyr. The UX layer for prediction markets. One account for every market. No chain-hopping, no wallet juggling, nothing to learn first.">
+  <img class="title-logo a" src="{{tyr}}" alt="tyr">
+  <div class="hero a d1">The UX layer for<br><span class="mark">prediction markets.</span></div>
+  <div class="body a d2 mt">One account. One balance. Every market.</div>
+  <div class="strip a d3 mt2">
+    <span class="logo sol">{{solana_svg}}</span>
+    <img class="logo" src="{{polymarket}}" alt="Polymarket">
+    <img class="logo" src="{{kalshi}}" alt="Kalshi">
+    <img class="logo dk" src="{{hyperliquid}}" alt="Hyperliquid">
+    <img class="logo" src="{{limitless}}" alt="Limitless">
+    <img class="logo t" src="{{world}}" alt="World">
+    <img class="logo t" src="{{zcash}}" alt="Zcash">
+    <img class="logo" src="{{tempo}}" alt="Tempo">
+  </div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 2 · THESIS -->
+<section class="slide" data-notes="<b>Say:</b> The next 100 million crypto users won't come in by learning crypto. Nobody learned TCP/IP to use the internet. Nobody learned SWIFT to use Venmo. People adopt technology when it disappears behind something they already want. In crypto, that thing is prediction markets.">
+  <div class="caption a">The thesis</div>
+  <div class="hero a d1">The next <span class="mark">100 million</span><br>crypto users won't<br>come in by <span class="strike">learning crypto.</span></div>
+  <div class="strip mt2 a d3" style="gap:5vw">
+    <div class="body">Nobody learned <b>TCP/IP</b> to use the internet.</div>
+    <div class="body">Nobody learned <b>SWIFT</b> to use Venmo.</div>
+  </div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 3 · BIGGER THAN CRYPTO -->
+<section class="slide dark" data-notes="<b>Say:</b> Prediction markets are bigger than crypto. Kalshi and Polymarket went from under $5B a month in September 2025 to about $24B in April 2026. Five times in seven months. That's already more than every legal US sportsbook combined, about $14B a month. And it's mostly not crypto: crypto questions are 7% of Kalshi and 20% of Polymarket. Sports is 80% of Kalshi. Wall Street noticed: ICE, the NYSE owner, agreed to put up to $2B into Polymarket. Kalshi raised at $22B and is reportedly seeking $40B. Polymarket is at $15B. The people moving this money are sports fans, politics watchers, macro traders. Not crypto natives.">
+  <div class="statement a"><span class="hl">Prediction markets are</span><br><span class="hl">bigger than crypto.</span></div>
+  <div class="mkt">
+    <div class="chart a d2">
+      <div class="ttl" style="margin-top:0">Monthly volume, Kalshi + Polymarket</div>
+      <div class="brow"><span class="lbl">Sep 2025</span><div class="btrack"><div class="bfill m" style="width:20%">&lt;$5B</div></div></div>
+      <div class="brow"><span class="lbl">Apr 2026</span><div class="btrack"><div class="bfill" style="width:100%;animation-delay:.2s">~$24B</div></div></div>
+      <div class="brow"><span class="lbl">All legal US sportsbooks</span><div class="btrack"><div class="bfill s" style="width:58%;animation-delay:.35s">~$14B</div></div></div>
+      <div class="ttl">Share of volume that is crypto questions</div>
+      <div class="brow"><span class="lbl">Kalshi</span><div class="btrack"><div class="bfill m" style="width:9%;animation-delay:.5s">7%</div></div></div>
+      <div class="brow"><span class="lbl">Polymarket</span><div class="btrack"><div class="bfill m" style="width:20%;animation-delay:.6s">20%</div></div></div>
+      <div class="small">Kalshi is 80% sports. Polymarket is 39% sports and 32% politics.</div>
+    </div>
+    <div class="metrics">
+      <div class="card a d3"><div class="big">5×</div><div class="small mt">volume growth in seven months</div></div>
+      <div class="card a d4"><div class="big">$2B</div><div class="small mt">ICE (NYSE owner) into Polymarket</div></div>
+      <div class="card a d5"><div class="big">$22B</div><div class="small mt">Kalshi valuation, reportedly seeking $40B</div></div>
+      <div class="card a d6"><div class="big">$15B</div><div class="small mt">Polymarket valuation</div></div>
+    </div>
+  </div>
+  <div class="src a d7">Pew Research, May 2026 · Bloomberg Law, Oct 2025 · CoinDesk, Jun 2026</div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 4 · THE LINE OUTSIDE THE DOOR -->
+<section class="slide" data-notes="<b>Say:</b> Picture the person who wants in. They see 'Polymarket says 70%' on the news. They have an opinion. They want to put $20 on it. Here's what crypto asks them to do. Install a wallet. Write down 24 words and never lose them. Buy USDC on an exchange. Bridge it to Polygon. Lose part of it to gas along the way. And when the next big market launches on another chain? Do it all again. So they close the tab. Every headline brings a new line of people. Crypto sends every one of them home.">
+  <div class="caption a">The problem</div>
+  <div class="h1 a d1">There's a line outside the door.<br><span class="mark">Crypto sends every one of them home.</span></div>
+  <div class="door">
+    <div class="headline a d2">
+      <div class="who"><img class="xs logo" src="{{polymarket}}" alt="">On the evening news</div>
+      <div class="h1" style="font-size:clamp(22px,2.2vw,36px)">"Polymarket says 70%."</div>
+      <div class="small mt">They have an opinion. They want to put $20 on it.</div>
+    </div>
+    <div class="wall a d3">
+      <div>Install a wallet <span>new app</span></div>
+      <div>Write down 24 words. Never lose them. <span>or lose it all</span></div>
+      <div>Buy USDC on an exchange <span>KYC, wait</span></div>
+      <div>Bridge it to Polygon <span>which bridge?</span></div>
+      <div>Lose a cut to gas on the way <span>$20 becomes less</span></div>
+      <div>New market on another chain? Repeat. <span>back to 01</span></div>
+    </div>
+    <div class="closed a d5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      <div class="h1">Tab closed.</div>
+      <div class="small" style="color:inherit">Every headline.<br>Every day.<br>Every new market.</div>
+    </div>
+  </div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 5 · A DOZEN MARKETS -->
+<section class="slide" data-notes="<b>Say:</b> And it gets worse every day. Solana alone now has a growing wave of prediction markets. Then Polymarket, Kalshi, Hyperliquid, Limitless, World. Those are just the main ones. There are hundreds more across 100-plus chains. Hundreds of places, each with its own wallet, its own balance, its own rules. The more markets exist, the harder it gets for a normal person to use any of them. tyr supports every one of them from one account.">
+  <div class="caption a">And it gets worse every day</div>
+  <div class="h1 a d1">Hundreds of markets. Hundreds of chains.<br>Today, that's <span class="mark">hundreds of accounts.</span></div>
+  <div class="feed"><div class="galaxy" style="margin-top:0">
+    <div class="tile home a d2"><span class="tag">SOLANA</span><span class="logo sol">{{solana_svg}}</span><b style="font-size:clamp(18px,1.7vw,28px)">Solana prediction markets</b><i>A fast-growing wave of native venues, plus Kalshi outcomes tokenized on Solana</i></div>
+    <div class="tile a d2"><img class="logo" src="{{polymarket}}" alt=""><b>Polymarket</b><i>own wallet</i></div>
+    <div class="tile a d3"><img class="logo" src="{{kalshi}}" alt=""><b>Kalshi</b><i>own account</i></div>
+    <div class="tile a d3"><img class="logo dk" src="{{hyperliquid}}" alt=""><b>Hyperliquid</b><i>own chain</i></div>
+    <div class="tile a d3"><img class="logo" src="{{limitless}}" alt=""><b>Limitless</b><i>on Base</i></div>
+    <div class="tile a d4"><img class="logo t" src="{{world}}" alt=""><b>World</b><i>own chain</i></div>
+    <div class="tile more a d5"><div class="plus">+100s more</div><i>across 100+ chains</i>
+      <div class="chains"><img class="logo" src="{{base}}" alt="Base"><img class="logo t" src="{{arbitrum}}" alt="Arbitrum"><img class="logo t" src="{{ethereum}}" alt="Ethereum"><img class="logo" src="{{robinhood}}" alt="Robinhood Chain"><img class="logo t" src="{{zcash}}" alt="Zcash"><img class="logo" src="{{tempo}}" alt="Tempo"><span class="etc">+</span></div></div>
+  </div>
+<svg class="funnel a d6" viewBox="0 0 100 300" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 20 C60 20 40 150 100 150"/><path d="M0 85 C60 85 40 150 100 150"/><path d="M0 150 L100 150"/><path d="M0 215 C60 215 40 150 100 150"/><path d="M0 280 C60 280 40 150 100 150"/>
+    </svg>
+    <div class="hubtyr a d7"><img src="{{tyr}}" alt="tyr"><div class="h3">tyr</div><div class="small">One account.<br>One balance.<br>Every market.</div></div>
+  </div>
+  <div class="body mt a d7">Every one is a new wallet, a new balance, a new set of rules. <b>tyr puts all of them behind one account.</b></div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 6 · ONE ACCOUNT -->
+<section class="slide dark" data-notes="<b>Say:</b> Prediction markets don't have a market problem. They have a front-door problem. tyr is that front door. You bring an opinion. tyr handles everything else, and every chain does one job only it can do. Tempo is your account: passkey login, no gas, spend limits enforced by the protocol. Zcash is the private way in: a shielded payment whose encrypted memo is the order itself. Solana is the bankroll: confidential balances, so nobody sees your amount, and settlement. Robinhood Chain lets you hedge a bet with a Stock Token. And the router sends every bet to the cheapest venue: Solana markets, Polymarket, Kalshi, Hyperliquid, Limitless, World. <b>Bridge:</b> here's what that looks like for the user.">
+  <div class="caption a">Introducing tyr</div>
+  <div class="h1 a d1">Not a market problem. A <span class="mark">front-door</span> problem.<br>tyr is the front door.</div>
+  <div class="body a d2" style="margin-top:1.4vh;max-width:70vw">You bring an opinion. tyr handles the venue, the chain, the money and the signing. Every chain behind it does one job only it can do.</div>
+  <div class="arch">
+    <div class="you a d3"><div class="h3">You</div><div class="small" style="margin-top:.6vh">A fingerprint and an opinion. That's it.</div></div>
+    <div class="arrow a d3">&rarr;</div>
+    <div class="stack a d4">
+      <div class="hd"><img src="{{tyr}}" alt="tyr"><div class="h3">tyr account layer</div></div>
+      <div class="layer"><img class="logo sm" src="{{tempo}}" alt=""><span class="who">TEMPO</span><span class="what"><b>Your account.</b> Passkey login, sponsored gas, spend limits the protocol enforces, receipts.</span></div>
+      <div class="layer"><img class="logo sm t" src="{{zcash}}" alt=""><span class="who">ZCASH</span><span class="what"><b>Private way in.</b> A shielded payment whose encrypted memo is the order.</span></div>
+      <div class="layer"><span class="logo sm sol">{{solana_svg}}</span><span class="who">SOLANA</span><span class="what"><b>Your bankroll.</b> Confidential balances hide amounts. Custody and settlement.</span></div>
+      <div class="layer"><img class="logo sm" src="{{robinhood}}" alt=""><span class="who">ROBINHOOD</span><span class="what"><b>The hedge.</b> Pair a bet with a Stock Token in the same ticket.</span></div>
+      <div class="layer"><span style="display:flex;gap:3px"><img class="logo xs" src="{{base}}" alt=""><img class="logo xs t" src="{{arbitrum}}" alt=""><img class="logo xs t" src="{{ethereum}}" alt=""></span><span class="who">BASE · ARB · ETH</span><span class="what"><b>Fund from anywhere.</b> Deposits land in one balance.</span></div>
+    </div>
+    <div class="arrow a d5">&rarr;</div>
+    <div class="outs a d6">
+      <div class="lbl">BEST-PRICE ROUTER</div>
+      <div><span class="logo sm sol">{{solana_svg}}</span>Solana markets</div>
+      <div><img class="logo sm" src="{{polymarket}}" alt="">Polymarket</div>
+      <div><img class="logo sm" src="{{kalshi}}" alt="">Kalshi</div>
+      <div><img class="logo sm dk" src="{{hyperliquid}}" alt="">Hyperliquid</div>
+      <div><img class="logo sm" src="{{limitless}}" alt="">Limitless</div>
+      <div><img class="logo sm t" src="{{world}}" alt="">World</div>
+    </div>
+  </div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 7 · THE SOLUTION IN DETAIL -->
+<section class="slide" data-notes="<b>Say:</b> Here's the user's whole journey. One: sign up with your fingerprint. A Tempo passkey account, fees sponsored, no seed phrase. Two: set a loss limit, say $50 a day. That opens a spend-limited session, so the limit lives on-chain, not in our backend. Three: fund from Base, Arbitrum, Ethereum or Solana, or privately with shielded Zcash. It lands in one confidential balance on Solana. Four: one list of questions with every venue's price. The router picks the cheapest after fees. Kalshi quotes lower here, but Polymarket fills cheaper, so that's where the bet goes. Five: bet and hedge in one tap with a Robinhood Chain Stock Token. Six: get paid with a receipt, and prove one payout for taxes without exposing anything else. And an AI agent can trade for you with a budget, never your keys.">
+  <div class="caption a">How it works</div>
+  <div class="h1 a d1">The account prediction markets <span class="mark">were missing.</span></div>
+  <div class="flow">
+    <div class="fc a d2"><div class="top"><span class="n">01 · SIGN UP</span><span class="by"><img class="logo xs" src="{{tempo}}" alt="">Tempo</span></div><div class="h3">Fingerprint. Done.</div><div class="small">Passkey account, fees sponsored. No seed phrase, no extension, no gas.</div></div>
+    <div class="fc a d2"><div class="top"><span class="n">02 · SET A LIMIT</span><span class="by"><img class="logo xs" src="{{tempo}}" alt="">Tempo MPP</span></div><div class="h3">Your limit is law.</div><div class="small">Set $50/day once. Every bet is checked on-chain. Over the limit is blocked, not warned.</div></div>
+    <div class="fc a d3"><div class="top"><span class="n">03 · FUND</span><span class="by"><img class="logo xs t" src="{{zcash}}" alt=""><span class="logo xs sol">{{solana_svg}}</span></span></div><div class="h3">One private balance.</div><div class="small">From Base, Arbitrum, Ethereum or Solana, or shielded Zcash. Lands in a Solana confidential balance nobody can read.</div></div>
+    <div class="fc a d3"><div class="top"><span class="n">04 · BET</span><span class="by">tyr router</span></div><div class="h3">Every market, best price.</div><div class="small">One list of questions, every venue's price side by side. The router fills at the cheapest all-in price, or splits the order.</div></div>
+    <div class="fc a d4"><div class="top"><span class="n">05 · HEDGE</span><span class="by"><img class="logo xs" src="{{robinhood}}" alt="">Robinhood Chain</span></div><div class="h3">Bet and hedge in one tap.</div><div class="small">Betting on the Fed? Hedge with an S&amp;P Stock Token in the same ticket. One receipt.</div></div>
+    <div class="fc key a d4"><div class="top"><span class="n">06 · GET PAID, SAFELY</span><span class="by">only on tyr</span></div><div class="h3">Private, provable, agent-safe.</div><div class="small">Payouts with receipts. Prove one payout for taxes, reveal nothing else. Give an AI a budget, never your keys.</div></div>
+  </div>
+  <div class="router a d5">
+    <span class="q">Same question,<br>100 YES</span>
+    <span class="v"><img class="logo sm" src="{{kalshi}}" alt="">Kalshi $0.60 + $1.68 fee = <b class="lose">$61.68</b></span>
+    <span class="v"><img class="logo sm" src="{{polymarket}}" alt="">Polymarket $0.61 + $0 fee = <b class="win">$61.00, routed here</b></span>
+  </div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<!-- 8 · CLOSE -->
+<section class="slide dark" data-notes="<b>Say:</b> The next 100 million users won't learn crypto. They'll just use tyr. Thank you.">
+  <img class="title-logo a" src="{{tyr}}" alt="tyr">
+  <div class="hero a d1">The next 100M users<br>won't learn crypto.<br><span class="mark">They'll just use tyr.</span></div>
+  <div class="strip a d3 mt2">
+    <span class="logo sol">{{solana_svg}}</span>
+    <img class="logo" src="{{polymarket}}" alt="Polymarket">
+    <img class="logo" src="{{kalshi}}" alt="Kalshi">
+    <img class="logo dk" src="{{hyperliquid}}" alt="Hyperliquid">
+    <img class="logo" src="{{limitless}}" alt="Limitless">
+    <img class="logo t" src="{{world}}" alt="World">
+    <img class="logo t" src="{{zcash}}" alt="Zcash">
+    <img class="logo" src="{{tempo}}" alt="Tempo">
+    <img class="logo" src="{{robinhood}}" alt="Robinhood Chain">
+  </div>
+  <div class="foot"><img src="{{tyr}}" alt="">tyr</div>
+</section>
+
+<div class="notes" id="notes"></div>
+<div class="nav"><button id="prev" aria-label="Previous">&larr;</button><span id="count"></span><button id="next" aria-label="Next">&rarr;</button><span>N notes</span></div>
+<script>
+const s=[...document.querySelectorAll('.slide')],notes=document.getElementById('notes');let i=0;
+function go(n){i=Math.max(0,Math.min(s.length-1,n));s.forEach((x,k)=>x.classList.toggle('active',k===i));
+document.getElementById('count').textContent=(i+1)+' / '+s.length;document.getElementById('progress').style.width=((i+1)/s.length*100)+'%';notes.innerHTML=s[i].dataset.notes||'';document.body.classList.toggle('on-dark',s[i].classList.contains('dark'));}
+document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key))go(i+1);else if(['ArrowLeft','PageUp'].includes(e.key))go(i-1);else if(e.key==='n'||e.key==='N')notes.classList.toggle('show');else if(e.key==='Home')go(0);else if(e.key==='End')go(s.length-1);});
+document.getElementById('prev').onclick=()=>go(i-1);document.getElementById('next').onclick=()=>go(i+1);
+let tx=null;document.addEventListener('touchstart',e=>tx=e.touches[0].clientX);document.addEventListener('touchend',e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50)go(i+(d<0?1:-1));tx=null;});
+go(0);
+</script>
+</body>
+</html>
